@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 照片月曆 · 設計版</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Caveat:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@400;600&display=swap');
+  :root{
+    --bg:#ECEEEA; --card:#FFFFFF; --ink:#232A2E; --muted:#6B7670; --line:#DBDED6;
+    --jade:#0F8A6B; --jade-soft:#E2F0EA; --sun:#C9483A; --sat:#2F6DB0;
+    --world:#7A47CE; --tech:#0B7C8C; --fun:#D6457F; --trad:#B5710F;
+    --sidebar:#232A2E; --sidebar-line:#3A434A; --sidebar-muted:#9AA6A2;
+    --display:"Bricolage Grotesque",system-ui,sans-serif;
+    --ui:system-ui,-apple-system,"Segoe UI","Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;
+    --radius:14px; --shadow:0 1px 2px rgba(35,42,46,.06),0 14px 36px rgba(35,42,46,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--ui);background:var(--bg);color:var(--ink);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+  .sidebar{width:200px;flex:0 0 200px;background:var(--sidebar);color:#fff;padding:26px 18px 22px;display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh}
+  .brand .eyebrow{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--sidebar-muted);margin-bottom:2px}
+  .brand .year{font-family:var(--display);font-weight:800;font-size:48px;line-height:.9;letter-spacing:-.02em}
+  .months{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .month-btn{font-family:var(--ui);font-size:13.5px;color:#D7DCD9;background:transparent;border:1px solid var(--sidebar-line);border-radius:9px;padding:9px 6px;cursor:pointer;transition:.15s}
+  .month-btn:hover{border-color:#5a6770;color:#fff}
+  .month-btn.active{background:var(--jade);border-color:var(--jade);color:#fff;font-weight:700}
+  .month-btn .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#E4A11B;margin-left:4px;vertical-align:middle;opacity:0}
+  .month-btn.filled .dot{opacity:1}
+  .sidebar .tip{margin-top:auto;font-size:11px;line-height:1.6;color:var(--sidebar-muted);border-top:1px solid var(--sidebar-line);padding-top:14px}
+
+  .center{flex:1;min-width:0;padding:34px 28px;display:flex;align-items:center;justify-content:center;overflow:auto}
+  .stage{display:flex;justify-content:center;align-items:center;width:100%}
+
+  .controls{width:322px;flex:0 0 322px;height:100vh;position:sticky;top:0;overflow-y:auto;background:var(--card);border-left:1px solid var(--line);padding:24px 20px 40px;display:flex;flex-direction:column;gap:18px}
+  .grp{display:flex;flex-direction:column;gap:9px}
+  .glabel{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .glabel small{text-transform:none;letter-spacing:0;font-size:10px;opacity:.85}
+  .glabel em{font-style:normal;color:var(--jade);font-weight:700}
+  .layout-row{display:flex;gap:7px;flex-wrap:wrap}
+  .layout-btn{width:50px;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:6px 5px 5px;cursor:pointer;text-align:center;transition:.15s}
+  .layout-btn:hover{border-color:#b9bfb6;transform:translateY(-1px)}
+  .layout-btn.active{border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-soft)}
+  .layout-btn svg{display:block;width:100%;height:auto}
+  .layout-btn .name{font-size:9.5px;margin-top:4px;color:var(--ink);line-height:1.15}
+  .layout-btn.active .name{color:var(--jade);font-weight:700}
+  .btn{font-family:var(--ui);font-size:14px;padding:12px 16px;border-radius:11px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;transition:.15s;white-space:nowrap;width:100%}
+  .btn:hover{border-color:#b9bfb6}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn.primary{background:var(--jade);border-color:var(--jade);color:#fff;font-weight:600}
+  .btn.primary:hover{background:#0c7459}
+  .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden;width:max-content;max-width:100%;flex-wrap:wrap}
+  .seg button{font:inherit;font-size:13px;padding:7px 11px;background:var(--card);border:0;border-right:1px solid var(--line);cursor:pointer;color:var(--ink)}
+  .seg button:last-child{border-right:0}
+  .seg button.active{background:var(--jade);color:#fff}
+  .posgrid{display:grid;grid-template-columns:repeat(3,28px);grid-template-rows:repeat(3,28px);gap:5px}
+  .posgrid button{border:1.5px solid var(--line);border-radius:6px;background:var(--card);cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+  .posgrid button:hover{border-color:#b9bfb6}
+  .posgrid button.active{background:var(--jade);border-color:var(--jade);color:#fff}
+  .swatches{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .swatch{width:25px;height:25px;border-radius:50%;border:1.5px solid rgba(0,0,0,.12);cursor:pointer;padding:0;position:relative}
+  .swatch.active{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--jade)}
+  .swatch.custom{display:inline-flex;align-items:center;justify-content:center;background:conic-gradient(red,orange,yellow,lime,aqua,blue,magenta,red);overflow:hidden}
+  .chip{font:inherit;font-size:11.5px;padding:5px 11px;border:1.5px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);cursor:pointer}
+  .chip:hover{border-color:#b9bfb6}
+  .chip.active{background:var(--jade);border-color:var(--jade);color:#fff}
+  .swatch.custom input{position:absolute;inset:-6px;width:200%;height:200%;opacity:0;cursor:pointer}
+  input[type=range]{width:100%;accent-color:var(--jade)}
+  .fontrow{display:flex;gap:8px;flex-wrap:wrap}
+  .fbtn{font:inherit;font-size:12.5px;padding:9px 13px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);cursor:pointer;color:var(--ink)}
+  .fbtn:hover{border-color:#b9bfb6}
+  .fbtn.reset{color:var(--muted)}
+  .fontnames{font-size:11px;color:var(--muted);margin-top:2px}
+  .divider{height:1px;background:var(--line);margin:2px -2px}
+
+  .preview{
+    --ar:3/4;
+    --cal-bg:rgba(255,255,255,.92); --cal-text:#232A2E;
+    --cal-muted:rgba(35,42,46,.5); --cal-line:rgba(35,42,46,.2);
+    --cal-font:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+    --title-font:"Noto Serif TC",serif; --num-font:"Caveat","Noto Serif TC",serif; --cal-pill:rgba(35,42,46,.07); --fest-color:rgba(35,42,46,.82); --cal-holibg:rgba(35,42,46,.08);
+    --cal-scale:1; --pos-align:center; --pos-justify:center;
+    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
+    width:100%;max-width:500px;display:flex;aspect-ratio:var(--ar)
+  }
+  .preview.l-top,.preview.l-bottom{flex-direction:column}
+  .preview.l-bottom{flex-direction:column-reverse}
+  .preview.l-left{flex-direction:row;max-width:720px}
+  .preview.l-right{flex-direction:row-reverse;max-width:720px}
+  .preview.l-overlay{position:relative;max-width:540px;justify-content:var(--pos-justify);align-items:var(--pos-align);padding:20px}
+
+  .photo{position:relative;overflow:hidden;cursor:pointer;background:#E6E9E3}
+  .l-top .photo,.l-bottom .photo{width:100%;flex:1 1 auto;min-height:140px}
+  .l-left .photo,.l-right .photo{flex:1 1 60%;align-self:stretch;min-height:0}
+  .l-overlay .photo{position:absolute;inset:0;flex:none}
+  .photo canvas{display:block;width:100%;height:100%}
+  .photo .hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(35,42,46,.7);color:#fff;font-size:11px;padding:5px 11px;border-radius:20px;opacity:0;transition:.15s;pointer-events:none;white-space:nowrap}
+  .photo:hover .hint{opacity:1}
+  .photo.dragover{outline:3px dashed var(--jade);outline-offset:-7px}
+  .capturing .hint{display:none}
+
+  .cal{font-family:var(--cal-font);color:var(--cal-text);background:var(--cal-bg);flex:0 0 auto;display:flex;flex-direction:column;gap:.25em;overflow:hidden;font-size:calc(13px*var(--cal-scale));padding:1em 1.1em 1.1em}
+  .l-left .cal,.l-right .cal{flex:1 1 44%;justify-content:center}
+  .l-overlay .cal{flex:0 0 auto;width:min(440px,82%);border-radius:12px;padding:1.1em 1.3em 1.2em;box-shadow:0 8px 30px rgba(0,0,0,.18);position:relative;z-index:1}
+  .cal-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--cal-line);padding:0 .1em .35em;margin-bottom:.15em}
+  .cal-month{font-family:var(--title-font);font-weight:600;font-size:1.95em;letter-spacing:.02em;color:var(--cal-text)}
+  .cal-year{font-family:var(--num-font);font-size:1.55em;color:var(--cal-muted);letter-spacing:.02em}
+  .gcal{display:grid;grid-template-columns:repeat(7,1fr);column-gap:.3em;row-gap:0}
+  .gwk{text-align:center;font-size:.72em;font-weight:500;letter-spacing:.12em;color:var(--cal-muted);text-transform:uppercase;padding:.15em 0 .45em;border-bottom:1px solid var(--cal-line);margin-bottom:.2em}
+  .gwk.sun{color:var(--sun)} .gwk.sat{color:var(--sat)}
+  .gc{min-height:3.2em;border-bottom:1px solid var(--cal-line);display:flex;flex-direction:column;padding:.2em .28em 0;overflow:hidden}
+  .gc.other{opacity:.13}
+  .gc.holiday{background:var(--cal-holibg);border-radius:.3em}
+  .gnum{font-family:var(--num-font);font-size:1.6em;line-height:1;color:var(--cal-text)}
+  .gc.sun .gnum{color:var(--sun)} .gc.sat .gnum{color:var(--sat)} .gc.holiday .gnum{color:var(--sun)}
+  .gc.today{outline:2px solid var(--jade);outline-offset:-2px;border-radius:.3em}
+  .glun{font-size:.62em;line-height:1.2;color:var(--cal-muted);margin-top:.12em}
+  .glun.term{color:var(--jade);font-weight:600}
+  .ghol{font-size:.6em;line-height:1.25;margin-top:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .ghol.tw{color:var(--sun)} .ghol.trad{color:var(--fest-color)}
+  .gpill{font-size:.56em;line-height:1.2;margin-top:.16em;padding:.1em .42em;border-radius:.35em;background:var(--cal-pill);color:var(--fest-color);width:fit-content;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gwrite{flex:1;min-height:.25em}
+
+  @media (max-width:1080px){
+    body{flex-wrap:wrap}
+    .sidebar{order:1} .center{order:2;flex:1 1 60%}
+    .controls{order:3;width:100%;flex:1 1 100%;height:auto;position:static;border-left:0;border-top:1px solid var(--line);flex-direction:row;flex-wrap:wrap;gap:16px 26px;align-items:flex-start}
+    .controls .btn{width:auto;min-width:150px}
+    input[type=range]{width:160px}
+  }
+  @media (max-width:780px){
+    .sidebar{width:100%;flex:none;height:auto;position:static;flex-direction:row;align-items:center;gap:14px;padding:14px 16px;overflow-x:auto}
+    .brand .year{font-size:30px} .months{display:flex;gap:6px;flex:1} .month-btn{padding:8px 10px;white-space:nowrap} .sidebar .tip{display:none}
+    .center{padding:20px 14px}
+    .preview.l-left,.preview.l-right{flex-direction:column;max-width:500px}
+    .preview.l-left .photo,.preview.l-right .photo{flex:1 1 auto}
+    .preview.l-left .cal,.preview.l-right .cal{flex:0 0 auto}
+  }
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><div class="eyebrow">Photo Calendar</div><div class="year">2026</div></div>
+    <nav class="months" id="months" aria-label="選擇月份"></nav>
+    <p class="tip">點照片區各區塊（或拖曳）上傳／更換當月照片，橘點＝已有照片。可放 1–4 張做方格／梯形拼貼。右側面板調整版面與設計。</p>
+  </aside>
+
+  <main class="center">
+    <div class="stage">
+      <div class="preview l-top" id="preview">
+        <div class="photo" id="photo">
+          <canvas id="pcanvas"></canvas>
+          <span class="hint">點空白處上傳 · 拖曳照片可調整位置</span>
+        </div>
+        <div class="cal" id="cal"></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="controls">
+    <div class="grp">
+      <span class="glabel">排版方式 <small>(照片為主)</small></span>
+      <div class="layout-row" id="layouts"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="grp">
+      <span class="glabel">畫面比例</span>
+      <div class="seg" id="aspectSeg">
+        <button data-ar="3/4" class="active">3:4</button>
+        <button data-ar="1/1">1:1</button>
+        <button data-ar="4/3">4:3</button>
+        <button data-ar="16/9">16:9</button>
+        <button data-ar="9/16">9:16</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">拼貼張數</span>
+      <div class="seg" id="countSeg">
+        <button data-n="1" class="active">1</button>
+        <button data-n="2">2</button>
+        <button data-n="3">3</button>
+        <button data-n="4">4</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">拼貼樣式</span>
+      <div class="seg" id="styleSeg">
+        <button data-s="grid" class="active">方格</button>
+        <button data-s="trap">梯形</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="grp">
+      <span class="glabel">日曆位置 <small>(滿版背景可自由定位)</small></span>
+      <div class="posgrid" id="posGrid">
+        <button data-v="T" data-h="L">↖</button><button data-v="T" data-h="C">↑</button><button data-v="T" data-h="R">↗</button>
+        <button data-v="C" data-h="L">←</button><button data-v="C" data-h="C" class="active">＋</button><button data-v="C" data-h="R">→</button>
+        <button data-v="B" data-h="L">↙</button><button data-v="B" data-h="C">↓</button><button data-v="B" data-h="R">↘</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">月曆縮放 <em id="scaleVal">100%</em></span>
+      <input type="range" id="scale" min="75" max="140" value="100">
+    </div>
+    <div class="divider"></div>
+    <div class="grp">
+      <span class="glabel">面板底色</span>
+      <div class="swatches" id="bgSwatches">
+        <button class="swatch active" data-c="#FFFFFF" style="background:#FFFFFF" title="白"></button>
+        <button class="swatch" data-c="#FAF6EE" style="background:#FAF6EE" title="奶油"></button>
+        <button class="swatch" data-c="#ECEAE4" style="background:#ECEAE4" title="米灰"></button>
+        <button class="swatch" data-c="#FCE3EC" style="background:#FCE3EC" title="粉"></button>
+        <button class="swatch" data-c="#DCE7EE" style="background:#DCE7EE" title="天藍"></button>
+        <button class="swatch" data-c="#DCE7DF" style="background:#DCE7DF" title="抹茶"></button>
+        <button class="swatch" data-c="#1C1C1E" style="background:#1C1C1E" data-dark="1" title="黑"></button>
+        <button class="swatch" data-c="#20302A" style="background:#20302A" data-dark="1" title="墨綠"></button>
+        <button class="swatch" data-c="#1E2A3A" style="background:#1E2A3A" data-dark="1" title="墨藍"></button>
+        <span class="swatch custom" title="自訂顏色"><input type="color" id="bgCustom" value="#ffffff"></span>
+      </div>
+    </div>
+    <div class="grp" id="opGrp">
+      <span class="glabel">透明度 <em id="opVal">92%</em> <small id="opNote">（僅滿版背景）</small></span>
+      <input type="range" id="opacity" min="0" max="100" value="92">
+    </div>
+    <div class="grp">
+      <span class="glabel">文字顏色</span>
+      <div class="swatches" id="txtSwatches">
+        <button class="swatch active" data-c="#232A2E" style="background:#232A2E" title="墨黑"></button>
+        <button class="swatch" data-c="#5A615C" style="background:#5A615C" title="灰"></button>
+        <button class="swatch" data-c="#FFFFFF" style="background:#FFFFFF" title="白"></button>
+        <button class="swatch" data-c="#F5EFE2" style="background:#F5EFE2" title="米白"></button>
+        <button class="swatch" data-c="#7A2E2E" style="background:#7A2E2E" title="酒紅"></button>
+        <button class="swatch" data-c="#2B3A67" style="background:#2B3A67" title="靛藍"></button>
+        <span class="swatch custom" title="自訂顏色"><input type="color" id="txtCustom" value="#232a2e"></span>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">節日文字色 <small>(假日固定紅字)</small></span>
+      <div class="swatches" id="festSwatches">
+        <button class="chip active" data-c="auto">跟隨內文</button>
+        <button class="swatch" data-c="#B5710F" style="background:#B5710F" title="赭"></button>
+        <button class="swatch" data-c="#2B6CB0" style="background:#2B6CB0" title="靛藍"></button>
+        <button class="swatch" data-c="#1F7A5A" style="background:#1F7A5A" title="墨綠"></button>
+        <button class="swatch" data-c="#8A5BD6" style="background:#8A5BD6" title="紫"></button>
+        <button class="swatch" data-c="#C2477E" style="background:#C2477E" title="桃"></button>
+        <span class="swatch custom" title="自訂顏色"><input type="color" id="festCustom" value="#b5710f"></span>
+      </div>
+    </div>
+    <div class="grp font-grp">
+      <span class="glabel">字體 <small>(缺字用輔助字體補)</small></span>
+      <div class="fontrow">
+        <label class="fbtn">主字體<input type="file" id="fontMain" accept=".ttf,.otf,.woff,.woff2" hidden></label>
+        <label class="fbtn">輔助字體<input type="file" id="fontFb" accept=".ttf,.otf,.woff,.woff2" hidden></label>
+        <button class="fbtn reset" id="fontReset">重設</button>
+      </div>
+      <div class="fontnames" id="fontNames">目前:預設黑體</div>
+    </div>
+    <div class="divider"></div>
+    <button class="btn primary" id="pngBtn">存 PNG（當月）</button>
+    <button class="btn" id="pngAllBtn">存全年（12 張 ZIP）</button>
+  </aside>
+
+  <input type="file" id="fileInput" accept="image/*" hidden>
+
+<script>
+var LUNAR={"1-1":["十三",0],"1-2":["十四",0],"1-3":["十五",0],"1-4":["十六",0],"1-5":["小寒",1],"1-6":["十八",0],"1-7":["十九",0],"1-8":["二十",0],"1-9":["廿一",0],"1-10":["廿二",0],"1-11":["廿三",0],"1-12":["廿四",0],"1-13":["廿五",0],"1-14":["廿六",0],"1-15":["廿七",0],"1-16":["廿八",0],"1-17":["廿九",0],"1-18":["三十",0],"1-19":["臘月",0],"1-20":["大寒",1],"1-21":["初三",0],"1-22":["初四",0],"1-23":["初五",0],"1-24":["初六",0],"1-25":["初七",0],"1-26":["初八",0],"1-27":["初九",0],"1-28":["初十",0],"1-29":["十一",0],"1-30":["十二",0],"1-31":["十三",0],"2-1":["十四",0],"2-2":["十五",0],"2-3":["十六",0],"2-4":["立春",1],"2-5":["十八",0],"2-6":["十九",0],"2-7":["二十",0],"2-8":["廿一",0],"2-9":["廿二",0],"2-10":["廿三",0],"2-11":["廿四",0],"2-12":["廿五",0],"2-13":["廿六",0],"2-14":["廿七",0],"2-15":["廿八",0],"2-16":["廿九",0],"2-17":["正月",0],"2-18":["雨水",1],"2-19":["初三",0],"2-20":["初四",0],"2-21":["初五",0],"2-22":["初六",0],"2-23":["初七",0],"2-24":["初八",0],"2-25":["初九",0],"2-26":["初十",0],"2-27":["十一",0],"2-28":["十二",0],"3-1":["十三",0],"3-2":["十四",0],"3-3":["十五",0],"3-4":["十六",0],"3-5":["驚蟄",1],"3-6":["十八",0],"3-7":["十九",0],"3-8":["二十",0],"3-9":["廿一",0],"3-10":["廿二",0],"3-11":["廿三",0],"3-12":["廿四",0],"3-13":["廿五",0],"3-14":["廿六",0],"3-15":["廿七",0],"3-16":["廿八",0],"3-17":["廿九",0],"3-18":["三十",0],"3-19":["二月",0],"3-20":["春分",1],"3-21":["初三",0],"3-22":["初四",0],"3-23":["初五",0],"3-24":["初六",0],"3-25":["初七",0],"3-26":["初八",0],"3-27":["初九",0],"3-28":["初十",0],"3-29":["十一",0],"3-30":["十二",0],"3-31":["十三",0],"4-1":["十四",0],"4-2":["十五",0],"4-3":["十六",0],"4-4":["十七",0],"4-5":["清明",1],"4-6":["十九",0],"4-7":["二十",0],"4-8":["廿一",0],"4-9":["廿二",0],"4-10":["廿三",0],"4-11":["廿四",0],"4-12":["廿五",0],"4-13":["廿六",0],"4-14":["廿七",0],"4-15":["廿八",0],"4-16":["廿九",0],"4-17":["三月",0],"4-18":["初二",0],"4-19":["初三",0],"4-20":["穀雨",1],"4-21":["初五",0],"4-22":["初六",0],"4-23":["初七",0],"4-24":["初八",0],"4-25":["初九",0],"4-26":["初十",0],"4-27":["十一",0],"4-28":["十二",0],"4-29":["十三",0],"4-30":["十四",0],"5-1":["十五",0],"5-2":["十六",0],"5-3":["十七",0],"5-4":["十八",0],"5-5":["立夏",1],"5-6":["二十",0],"5-7":["廿一",0],"5-8":["廿二",0],"5-9":["廿三",0],"5-10":["廿四",0],"5-11":["廿五",0],"5-12":["廿六",0],"5-13":["廿七",0],"5-14":["廿八",0],"5-15":["廿九",0],"5-16":["三十",0],"5-17":["四月",0],"5-18":["初二",0],"5-19":["初三",0],"5-20":["初四",0],"5-21":["小滿",1],"5-22":["初六",0],"5-23":["初七",0],"5-24":["初八",0],"5-25":["初九",0],"5-26":["初十",0],"5-27":["十一",0],"5-28":["十二",0],"5-29":["十三",0],"5-30":["十四",0],"5-31":["十五",0],"6-1":["十六",0],"6-2":["十七",0],"6-3":["十八",0],"6-4":["十九",0],"6-5":["芒種",1],"6-6":["廿一",0],"6-7":["廿二",0],"6-8":["廿三",0],"6-9":["廿四",0],"6-10":["廿五",0],"6-11":["廿六",0],"6-12":["廿七",0],"6-13":["廿八",0],"6-14":["廿九",0],"6-15":["五月",0],"6-16":["初二",0],"6-17":["初三",0],"6-18":["初四",0],"6-19":["初五",0],"6-20":["初六",0],"6-21":["夏至",1],"6-22":["初八",0],"6-23":["初九",0],"6-24":["初十",0],"6-25":["十一",0],"6-26":["十二",0],"6-27":["十三",0],"6-28":["十四",0],"6-29":["十五",0],"6-30":["十六",0],"7-1":["十七",0],"7-2":["十八",0],"7-3":["十九",0],"7-4":["二十",0],"7-5":["廿一",0],"7-6":["廿二",0],"7-7":["小暑",1],"7-8":["廿四",0],"7-9":["廿五",0],"7-10":["廿六",0],"7-11":["廿七",0],"7-12":["廿八",0],"7-13":["廿九",0],"7-14":["六月",0],"7-15":["初二",0],"7-16":["初三",0],"7-17":["初四",0],"7-18":["初五",0],"7-19":["初六",0],"7-20":["初七",0],"7-21":["初八",0],"7-22":["初九",0],"7-23":["大暑",1],"7-24":["十一",0],"7-25":["十二",0],"7-26":["十三",0],"7-27":["十四",0],"7-28":["十五",0],"7-29":["十六",0],"7-30":["十七",0],"7-31":["十八",0],"8-1":["十九",0],"8-2":["二十",0],"8-3":["廿一",0],"8-4":["廿二",0],"8-5":["廿三",0],"8-6":["廿四",0],"8-7":["立秋",1],"8-8":["廿六",0],"8-9":["廿七",0],"8-10":["廿八",0],"8-11":["廿九",0],"8-12":["三十",0],"8-13":["七月",0],"8-14":["初二",0],"8-15":["初三",0],"8-16":["初四",0],"8-17":["初五",0],"8-18":["初六",0],"8-19":["初七",0],"8-20":["初八",0],"8-21":["初九",0],"8-22":["初十",0],"8-23":["處暑",1],"8-24":["十二",0],"8-25":["十三",0],"8-26":["十四",0],"8-27":["十五",0],"8-28":["十六",0],"8-29":["十七",0],"8-30":["十八",0],"8-31":["十九",0],"9-1":["二十",0],"9-2":["廿一",0],"9-3":["廿二",0],"9-4":["廿三",0],"9-5":["廿四",0],"9-6":["廿五",0],"9-7":["白露",1],"9-8":["廿七",0],"9-9":["廿八",0],"9-10":["廿九",0],"9-11":["八月",0],"9-12":["初二",0],"9-13":["初三",0],"9-14":["初四",0],"9-15":["初五",0],"9-16":["初六",0],"9-17":["初七",0],"9-18":["初八",0],"9-19":["初九",0],"9-20":["初十",0],"9-21":["十一",0],"9-22":["十二",0],"9-23":["秋分",1],"9-24":["十四",0],"9-25":["十五",0],"9-26":["十六",0],"9-27":["十七",0],"9-28":["十八",0],"9-29":["十九",0],"9-30":["二十",0],"10-1":["廿一",0],"10-2":["廿二",0],"10-3":["廿三",0],"10-4":["廿四",0],"10-5":["廿五",0],"10-6":["廿六",0],"10-7":["廿七",0],"10-8":["寒露",1],"10-9":["廿九",0],"10-10":["九月",0],"10-11":["初二",0],"10-12":["初三",0],"10-13":["初四",0],"10-14":["初五",0],"10-15":["初六",0],"10-16":["初七",0],"10-17":["初八",0],"10-18":["初九",0],"10-19":["初十",0],"10-20":["十一",0],"10-21":["十二",0],"10-22":["十三",0],"10-23":["霜降",1],"10-24":["十五",0],"10-25":["十六",0],"10-26":["十七",0],"10-27":["十八",0],"10-28":["十九",0],"10-29":["二十",0],"10-30":["廿一",0],"10-31":["廿二",0],"11-1":["廿三",0],"11-2":["廿四",0],"11-3":["廿五",0],"11-4":["廿六",0],"11-5":["廿七",0],"11-6":["廿八",0],"11-7":["立冬",1],"11-8":["三十",0],"11-9":["十月",0],"11-10":["初二",0],"11-11":["初三",0],"11-12":["初四",0],"11-13":["初五",0],"11-14":["初六",0],"11-15":["初七",0],"11-16":["初八",0],"11-17":["初九",0],"11-18":["初十",0],"11-19":["十一",0],"11-20":["十二",0],"11-21":["十三",0],"11-22":["小雪",1],"11-23":["十五",0],"11-24":["十六",0],"11-25":["十七",0],"11-26":["十八",0],"11-27":["十九",0],"11-28":["二十",0],"11-29":["廿一",0],"11-30":["廿二",0],"12-1":["廿三",0],"12-2":["廿四",0],"12-3":["廿五",0],"12-4":["廿六",0],"12-5":["廿七",0],"12-6":["廿八",0],"12-7":["大雪",1],"12-8":["三十",0],"12-9":["冬月",0],"12-10":["初二",0],"12-11":["初三",0],"12-12":["初四",0],"12-13":["初五",0],"12-14":["初六",0],"12-15":["初七",0],"12-16":["初八",0],"12-17":["初九",0],"12-18":["初十",0],"12-19":["十一",0],"12-20":["十二",0],"12-21":["十三",0],"12-22":["冬至",1],"12-23":["十五",0],"12-24":["十六",0],"12-25":["十七",0],"12-26":["十八",0],"12-27":["十九",0],"12-28":["二十",0],"12-29":["廿一",0],"12-30":["廿二",0],"12-31":["廿三",0]};
+var LUNARFEST={"1-26":["臘八節"],"2-3":["尾牙"],"2-17":["春節"],"2-18":["春節"],"2-19":["春節"],"3-3":["元宵節"],"3-20":["頭牙‧土地公生"],"6-19":["端午節"],"8-19":["七夕情人節"],"8-27":["中元節"],"9-25":["中秋節"],"10-18":["重陽節"],"2-15":["小年夜"],"2-16":["除夕"]};
+var HOLIDAYS={"1-1":"元旦","2-15":"小年夜","2-16":"除夕","2-17":"春節","2-18":"春節","2-19":"春節","2-20":"春節彈性放假","2-27":"和平紀念日補假","2-28":"和平紀念日","4-3":"兒童節補假","4-4":"兒童節","4-5":"清明節","4-6":"清明節補假","5-1":"勞動節","6-19":"端午節","9-25":"中秋節","9-28":"教師節","10-9":"國慶日補假","10-10":"國慶日","10-25":"光復節","10-26":"光復節補假","12-25":"行憲紀念日"};
+var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]],"2-14":[["西洋情人節","world"]],"3-8":[["國際婦女節","world"]],"3-14":[["白色情人節","world"],["圓周率日","tech"]],"3-17":[["聖派翠克節","world"]],"3-31":[["世界備份日","tech"]],"4-1":[["愚人節","world"]],"4-14":[["黑色情人節","fun"]],"4-22":[["世界地球日","world"]],"4-23":[["世界閱讀日","world"]],"4-30":[["珍珠奶茶日","fun"]],"5-4":[["星際大戰日","tech"]],"5-10":[["母親節","world"]],"5-14":[["玫瑰情人節","fun"]],"5-25":[["極客驕傲日","tech"]],"5-28":[["國際漢堡日","fun"]],"6-1":[["國際兒童節","world"]],"6-14":[["親親情人節","fun"]],"6-21":[["國際自拍日","fun"]],"7-6":[["國際接吻日","fun"]],"7-7":[["世界巧克力日","fun"]],"7-14":[["銀色情人節","fun"]],"7-17":[["世界表情符號日","tech"]],"8-7":[["國際啤酒日","fun"]],"8-8":[["父親節(台灣)","tw"],["國際貓咪日","fun"]],"8-13":[["國際左撇子日","fun"]],"8-14":[["綠色情人節","fun"]],"8-26":[["國際狗狗日","fun"]],"9-13":[["程式設計師節","tech"]],"9-14":[["音樂情人節","fun"]],"10-1":[["國際咖啡日","fun"]],"10-2":[["世界微笑日","fun"]],"10-4":[["世界動物日","fun"]],"10-14":[["葡萄酒情人節","fun"]],"10-31":[["萬聖節","world"]],"11-11":[["雙11 · 光棍節","fun"]],"11-13":[["世界友善日","fun"]],"11-14":[["電影情人節","fun"]],"11-26":[["感恩節","world"]],"11-30":[["國際資安日","tech"]],"12-14":[["擁抱情人節","fun"]],"12-24":[["平安夜","world"]],"12-25":[["聖誕節","world"]],"12-31":[["跨年夜","world"]]};
+
+(function(){
+  "use strict";
+  var YEAR=2026;
+  var MN=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+  var WEEK=["日","一","二","三","四","五","六"];
+  var WEEK_EN=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+  var LAYOUTS=[{id:"l-top",name:"上圖下曆"},{id:"l-bottom",name:"下圖上曆"},{id:"l-left",name:"左圖右曆"},{id:"l-right",name:"右圖左曆"},{id:"l-overlay",name:"滿版背景"}];
+  var DEFAULT_FONT='"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif';
+
+  // square (grid) regions as [x,y,w,h] fractions
+  var GRID={1:[[0,0,1,1]],2:[[0,0,.5,1],[.5,0,.5,1]],3:[[0,0,.58,1],[.58,0,.42,.5],[.58,.5,.42,.5]],4:[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]]};
+  // trapezoid regions as polygons of [x,y] fractions
+  var TRAP={
+    2:[[[0,0],[.62,0],[.38,1],[0,1]],[[.62,0],[1,0],[1,1],[.38,1]]],
+    3:[[[0,0],[.42,0],[.22,1],[0,1]],[[.42,0],[.78,0],[.58,1],[.22,1]],[[.78,0],[1,0],[1,1],[.58,1]]],
+    4:[[[0,0],[.32,0],[.16,1],[0,1]],[[.32,0],[.56,0],[.40,1],[.16,1]],[[.56,0],[.80,0],[.64,1],[.40,1]],[[.80,0],[1,0],[1,1],[.64,1]]]
+  };
+
+  var images={};         // month -> array of dataURL (up to 4)
+  var cache={};          // dataURL -> HTMLImageElement
+  var offsets={};        // month -> array of {ox,oy} pan offsets [-1..1]
+  var current, layout="l-top";
+  var collageCount=1, collageStyle="grid", uploadTarget=0, curRegions=null;
+  var theme={ar:"3/4",bg:"#FFFFFF",opacity:0.92,txt:"#232A2E",scale:1,posV:"C",posH:"C",fest:"auto",fontMain:null,fontFb:null};
+  var today=new Date(), isThisYear=today.getFullYear()===YEAR;
+  current = isThisYear ? today.getMonth() : 0;
+
+  var $=function(id){return document.getElementById(id);};
+  var monthsEl=$("months"),layoutsEl=$("layouts"),previewEl=$("preview"),photoEl=$("photo"),
+      calEl=$("cal"),fileInput=$("fileInput"),cv=$("pcanvas");
+
+  function hexToRgb(h){h=h.replace("#","");if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function rgba(h,a){var c=hexToRgb(h);return"rgba("+c[0]+","+c[1]+","+c[2]+","+a+")";}
+  function lum(h){var c=hexToRgb(h);return(0.299*c[0]+0.587*c[1]+0.114*c[2])/255;}
+
+  function icon(id){
+    var s='stroke="#232A2E" stroke-width="1.4" fill="none"',f='fill="#0F8A6B" opacity=".85"',l='stroke="#C2C8C0" stroke-width="1.1"';
+    var fr='<rect x="2" y="2" width="40" height="36" rx="3" '+s+'/>';
+    if(id==="l-top")return '<svg viewBox="0 0 44 40">'+fr+'<rect x="6" y="6" width="32" height="18" rx="1.5" '+f+'/><line x1="6" y1="29" x2="38" y2="29" '+l+'/><line x1="6" y1="33" x2="38" y2="33" '+l+'/></svg>';
+    if(id==="l-bottom")return '<svg viewBox="0 0 44 40">'+fr+'<rect x="6" y="16" width="32" height="18" rx="1.5" '+f+'/><line x1="6" y1="8" x2="38" y2="8" '+l+'/><line x1="6" y1="12" x2="38" y2="12" '+l+'/></svg>';
+    if(id==="l-left")return '<svg viewBox="0 0 44 40">'+fr+'<rect x="6" y="6" width="20" height="28" rx="1.5" '+f+'/><line x1="29" y1="12" x2="38" y2="12" '+l+'/><line x1="29" y1="18" x2="38" y2="18" '+l+'/><line x1="29" y1="24" x2="38" y2="24" '+l+'/><line x1="29" y1="30" x2="38" y2="30" '+l+'/></svg>';
+    if(id==="l-right")return '<svg viewBox="0 0 44 40">'+fr+'<rect x="18" y="6" width="20" height="28" rx="1.5" '+f+'/><line x1="6" y1="12" x2="15" y2="12" '+l+'/><line x1="6" y1="18" x2="15" y2="18" '+l+'/><line x1="6" y1="24" x2="15" y2="24" '+l+'/><line x1="6" y1="30" x2="15" y2="30" '+l+'/></svg>';
+    return '<svg viewBox="0 0 44 40"><rect x="2" y="2" width="40" height="36" rx="3" '+f+'/><rect x="11" y="11" width="22" height="18" rx="2" fill="#fff" opacity=".92"/><line x1="14" y1="22" x2="30" y2="22" '+l+'/><line x1="14" y1="26" x2="30" y2="26" '+l+'/></svg>';
+  }
+
+  MN.forEach(function(m,i){
+    var b=document.createElement("button");
+    b.className="month-btn"+(i===current?" active":"");
+    b.innerHTML=m+'<span class="dot"></span>';b.dataset.m=i;
+    b.addEventListener("click",function(){selectMonth(i);});
+    monthsEl.appendChild(b);
+  });
+  LAYOUTS.forEach(function(lo){
+    var b=document.createElement("button");
+    b.className="layout-btn"+(lo.id===layout?" active":"");
+    b.dataset.l=lo.id;b.innerHTML=icon(lo.id)+'<div class="name">'+lo.name+'</div>';
+    b.addEventListener("click",function(){selectLayout(lo.id);});
+    layoutsEl.appendChild(b);
+  });
+  function syncMonths(){[].forEach.call(monthsEl.children,function(c){var m=+c.dataset.m;c.classList.toggle("active",m===current);c.classList.toggle("filled",hasImg(m));});}
+  function hasImg(m){var a=images[m];if(!a)return false;for(var i=0;i<a.length;i++)if(a[i])return true;return false;}
+  function selectMonth(i){current=i;syncMonths();render();}
+  function selectLayout(id){layout=id;[].forEach.call(layoutsEl.children,function(c){c.classList.toggle("active",c.dataset.l===id);});render();}
+
+  var FLEX={T:"flex-start",C:"center",B:"flex-end",L:"flex-start",R:"flex-end"};
+  function fontStack(){var s=[];if(theme.fontMain)s.push('"'+theme.fontMain+'"');if(theme.fontFb)s.push('"'+theme.fontFb+'"');s.push(DEFAULT_FONT);return s.join(",");}
+  function applyTheme(){
+    var p=previewEl.style, overlay=layout==="l-overlay";
+    p.setProperty("--ar",theme.ar);
+    p.setProperty("--cal-bg",rgba(theme.bg, overlay?theme.opacity:1));
+    p.setProperty("--cal-text",theme.txt);
+    p.setProperty("--cal-muted",rgba(theme.txt,0.5));
+    p.setProperty("--cal-line",rgba(theme.txt,0.2));
+    p.setProperty("--cal-font",fontStack());
+    p.setProperty("--title-font",theme.fontMain?fontStack():'"Noto Serif TC",serif');
+    p.setProperty("--num-font",theme.fontMain?fontStack():'"Caveat","Noto Serif TC",serif');
+    p.setProperty("--cal-pill",rgba(theme.txt,0.08));
+    p.setProperty("--cal-holibg",rgba(theme.txt, lum(theme.bg)<0.5?0.16:0.09));
+    p.setProperty("--fest-color", theme.fest==="auto"?rgba(theme.txt,0.82):theme.fest);
+    p.setProperty("--cal-scale",theme.scale);
+    p.setProperty("--pos-align",FLEX[theme.posV]);
+    p.setProperty("--pos-justify",FLEX[theme.posH]);
+    var op=$("opacity");if(op)op.disabled=!overlay;
+    var og=$("opGrp");if(og)og.style.opacity=overlay?"1":".5";
+    var on=$("opNote");if(on)on.style.display=overlay?"none":"inline";
+  }
+
+  /* ---------- calendar ---------- */
+  function chips(key){
+    var out="";
+    if(HOLIDAYS[key]) out+='<span class="ghol tw">'+HOLIDAYS[key]+'</span>';
+    var fest="",fc="";
+    if(LUNARFEST[key]){fest=LUNARFEST[key][0];fc="trad";}
+    else if(EVENTS[key]){fest=EVENTS[key][0][0];fc=EVENTS[key][0][1];}
+    if(fest){
+      if(fc==="trad") out+='<span class="ghol trad">'+fest+'</span>';
+      else out+='<span class="gpill '+fc+'">'+fest+'</span>';
+    }
+    return out;
+  }
+  function dayCell(day,dow,m){
+    var key=(m+1)+"-"+day,lun=LUNAR[key]||["",0],cls="gc";
+    if(dow===0)cls+=" sun";else if(dow===6)cls+=" sat";
+    if(HOLIDAYS[key])cls+=" holiday";
+    if(isThisYear&&m===today.getMonth()&&day===today.getDate())cls+=" today";
+    return '<div class="'+cls+'"><span class="gnum">'+day+'</span>'+
+      (lun[0]?'<span class="glun'+(lun[1]?" term":"")+'">'+lun[0]+'</span>':'')+
+      chips(key)+'<span class="gwrite"></span></div>';
+  }
+  function otherCell(n){return '<div class="gc other"><span class="gnum">'+n+'</span><span class="gwrite"></span></div>';}
+  function buildCalendar(m){
+    var first=new Date(YEAR,m,1).getDay(),total=new Date(YEAR,m+1,0).getDate(),prev=new Date(YEAR,m,0).getDate();
+    var h='<div class="cal-head"><div class="cal-month">'+(m+1)+' 月</div><div class="cal-year">'+YEAR+'</div></div>';
+    var g='<div class="gcal">';
+    WEEK_EN.forEach(function(w,i){g+='<div class="gwk '+(i===0?"sun":i===6?"sat":"")+'">'+w+'</div>';});
+    for(var i=first;i>0;i--) g+=otherCell(prev-i+1);
+    for(var d=1;d<=total;d++){var dow=new Date(YEAR,m,d).getDay();g+=dayCell(d,dow,m);}
+    var used=first+total;for(var k=1;k<=42-used;k++) g+=otherCell(k);
+    return h+g+'</div>';
+  }
+
+  /* ---------- collage canvas ---------- */
+  function regionsFor(){
+    if(collageCount===1)return{type:"rect",list:[[0,0,1,1]]};
+    if(collageStyle==="grid")return{type:"rect",list:GRID[collageCount]};
+    return{type:"poly",list:TRAP[collageCount]};
+  }
+  function clamp(v,a,b){return v<a?a:v>b?b:v;}
+  function clamp01(v){return v<0?0:v>1?1:v;}
+  function getOffset(m,i){return (offsets[m]&&offsets[m][i])||{ox:0,oy:0};}
+  function ensureOffset(m,i){if(!offsets[m])offsets[m]=[];if(!offsets[m][i])offsets[m][i]={ox:0,oy:0};return offsets[m][i];}
+  function coverParams(iw,ih,w,h){
+    var ir=iw/ih,r=w/h;
+    if(ir>r){var sh=ih,sw=sh*r;return{axis:"x",sw:sw,sh:sh,slack:iw-sw};}
+    var sw2=iw,sh2=sw2/r;return{axis:"y",sw:sw2,sh:sh2,slack:ih-sh2};
+  }
+  function coverPan(ctx,img,x,y,w,h,off){
+    var p=coverParams(img.naturalWidth,img.naturalHeight,w,h),sx=0,sy=0;
+    if(p.axis==="x"){sx=clamp(p.slack*(0.5+(off?off.ox:0)/2),0,p.slack);}
+    else{sy=clamp(p.slack*(0.5+(off?off.oy:0)/2),0,p.slack);}
+    ctx.drawImage(img,sx,sy,p.sw,p.sh,x,y,w,h);
+  }
+  function fillPh(ctx,x,y,w,h,plus){
+    var g=ctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,"#F1F3EF");g.addColorStop(1,"#E2E6DF");
+    ctx.fillStyle=g;ctx.fillRect(x,y,w,h);
+    if(plus){ctx.fillStyle="rgba(107,118,112,.55)";ctx.font="600 22px system-ui,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("＋",x+w/2,y+h/2);}
+  }
+  function polyPath(ctx,pts,W,H){ctx.beginPath();pts.forEach(function(p,i){var x=p[0]*W,y=p[1]*H;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);});ctx.closePath();}
+  function bbox(pts,W,H){var xs=pts.map(function(p){return p[0]*W;}),ys=pts.map(function(p){return p[1]*H;});var x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys);return{x:x0,y:y0,w:x1-x0,h:y1-y0};}
+  function regionDestPx(i,cw,ch){
+    var reg=regionsFor();
+    if(reg.type==="rect"){
+      var rc=reg.list[i],gap=collageCount>1?3:0;
+      var x=rc[0]*cw,y=rc[1]*ch,w=rc[2]*cw,h=rc[3]*ch;
+      if(rc[0]>0.001){x+=gap/2;w-=gap/2;}
+      if(rc[0]+rc[2]<0.999){w-=gap/2;}
+      if(rc[1]>0.001){y+=gap/2;h-=gap/2;}
+      if(rc[1]+rc[3]<0.999){h-=gap/2;}
+      return{x:x,y:y,w:w,h:h,poly:null};
+    }
+    var poly=reg.list[i],bb=bbox(poly,cw,ch);
+    return{x:bb.x,y:bb.y,w:bb.w,h:bb.h,poly:poly};
+  }
+  function drawCollage(forExport){
+    var cw=photoEl.clientWidth,ch=photoEl.clientHeight;
+    if(!cw||!ch)return;
+    var ratio=forExport?2:Math.min(2,window.devicePixelRatio||1);
+    cv.width=Math.round(cw*ratio);cv.height=Math.round(ch*ratio);
+    var ctx=cv.getContext("2d");ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,cw,ch);
+    var arr=images[current]||[],reg=regionsFor();curRegions=reg;
+    for(var i=0;i<reg.list.length;i++){
+      var d=regionDestPx(i,cw,ch),im=arr[i]&&cache[arr[i]];
+      ctx.save();
+      if(d.poly){polyPath(ctx,d.poly,cw,ch);ctx.clip();}
+      if(im&&im.complete&&im.naturalWidth)coverPan(ctx,im,d.x,d.y,d.w,d.h,getOffset(current,i));
+      else fillPh(ctx,d.x,d.y,d.w,d.h,!forExport);
+      ctx.restore();
+    }
+  }
+  function pointInPoly(x,y,poly){var inside=false;for(var i=0,j=poly.length-1;i<poly.length;j=i++){var xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];var hit=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi);if(hit)inside=!inside;}return inside;}
+  function regionAt(px,py){
+    if(!curRegions)return 0;
+    if(curRegions.type==="rect"){for(var i=0;i<curRegions.list.length;i++){var r=curRegions.list[i];if(px>=r[0]&&px<=r[0]+r[2]&&py>=r[1]&&py<=r[1]+r[3])return i;}return 0;}
+    for(var k=0;k<curRegions.list.length;k++){if(pointInPoly(px,py,curRegions.list[k]))return k;}return 0;
+  }
+
+  function decode(url,cb){
+    if(cache[url]&&cache[url].complete&&cache[url].naturalWidth){cb&&cb();return;}
+    var im=new Image();im.onload=function(){cache[url]=im;cb&&cb();};im.onerror=function(){cb&&cb();};im.src=url;cache[url]=im;
+  }
+  function ensureDecoded(m){
+    var arr=images[m]||[];
+    return Promise.all(arr.map(function(u){return new Promise(function(res){if(!u)return res();decode(u,res);});}));
+  }
+
+  var rafPending=false;
+  function scheduleDraw(){if(rafPending)return;rafPending=true;requestAnimationFrame(function(){rafPending=false;drawCollage(false);});}
+
+  function render(){
+    previewEl.className="preview "+layout;applyTheme();
+    calEl.innerHTML=buildCalendar(current);
+    ensureDecoded(current).then(function(){scheduleDraw();});
+    syncMonths();
+  }
+
+  if(window.ResizeObserver){new ResizeObserver(function(){scheduleDraw();}).observe(photoEl);}
+  window.addEventListener("resize",scheduleDraw);
+
+  /* ---------- upload ---------- */
+  function loadFile(file){
+    if(!file||!/^image\//.test(file.type))return;
+    var r=new FileReader();
+    r.onload=function(e){var url=e.target.result;if(!images[current])images[current]=[];images[current][uploadTarget]=url;ensureOffset(current,uploadTarget).ox=0;ensureOffset(current,uploadTarget).oy=0;decode(url,function(){scheduleDraw();syncMonths();});};
+    r.readAsDataURL(file);
+  }
+  function targetFromEvent(e){var rect=photoEl.getBoundingClientRect();var px=(e.clientX-rect.left)/rect.width,py=(e.clientY-rect.top)/rect.height;return regionAt(clamp01(px),clamp01(py));}
+  var drag=null;
+  photoEl.addEventListener("mousedown",function(e){
+    if(e.button!==0)return;
+    var i=targetFromEvent(e),url=(images[current]||[])[i];
+    drag={i:i,sx:e.clientX,sy:e.clientY,moved:false,has:!!url};
+    if(url&&cache[url]&&cache[url].naturalWidth){
+      var d=regionDestPx(i,photoEl.clientWidth,photoEl.clientHeight),p=coverParams(cache[url].naturalWidth,cache[url].naturalHeight,d.w,d.h),off=getOffset(current,i);
+      drag.axis=p.axis;drag.sw=p.sw;drag.sh=p.sh;drag.slack=p.slack;drag.w=d.w;drag.h=d.h;drag.ox=off.ox;drag.oy=off.oy;
+      photoEl.style.cursor="grabbing";
+    }
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove",function(e){
+    if(!drag||!drag.has)return;
+    var dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+    if(!drag.moved&&Math.sqrt(dx*dx+dy*dy)>4)drag.moved=true;
+    if(!drag.moved)return;
+    var off=ensureOffset(current,drag.i);
+    if(drag.axis==="x")off.ox=drag.slack>0?clamp(drag.ox-2*dx*(drag.sw/drag.w)/drag.slack,-1,1):0;
+    else off.oy=drag.slack>0?clamp(drag.oy-2*dy*(drag.sh/drag.h)/drag.slack,-1,1):0;
+    scheduleDraw();
+  });
+  window.addEventListener("mouseup",function(){
+    if(!drag)return;
+    var wasClick=!drag.moved,i=drag.i;photoEl.style.cursor="";drag=null;
+    if(wasClick){uploadTarget=i;fileInput.click();}
+  });
+  photoEl.addEventListener("mousemove",function(e){
+    if(drag)return;
+    var url=(images[current]||[])[targetFromEvent(e)];
+    photoEl.style.cursor=url?"grab":"pointer";
+  });
+  fileInput.addEventListener("change",function(e){loadFile(e.target.files[0]);fileInput.value="";});
+  ["dragenter","dragover"].forEach(function(ev){photoEl.addEventListener(ev,function(e){e.preventDefault();photoEl.classList.add("dragover");});});
+  ["dragleave","drop"].forEach(function(ev){photoEl.addEventListener(ev,function(e){e.preventDefault();photoEl.classList.remove("dragover");});});
+  photoEl.addEventListener("drop",function(e){if(e.dataTransfer.files.length){uploadTarget=targetFromEvent(e);loadFile(e.dataTransfer.files[0]);}});
+
+  /* ---------- panel controls ---------- */
+  function segActivate(container,btn){[].forEach.call(container.children,function(c){c.classList.remove("active");});btn.classList.add("active");}
+  $("aspectSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);theme.ar=b.dataset.ar;applyTheme();scheduleDraw();});
+  $("countSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);collageCount=+b.dataset.n;scheduleDraw();syncMonths();});
+  $("styleSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);collageStyle=b.dataset.s;scheduleDraw();});
+  $("posGrid").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);theme.posV=b.dataset.v;theme.posH=b.dataset.h;applyTheme();});
+  $("scale").addEventListener("input",function(e){theme.scale=(+e.target.value)/100;$("scaleVal").textContent=e.target.value+"%";applyTheme();});
+
+  function setActiveSwatch(container,hex){[].forEach.call(container.querySelectorAll(".swatch"),function(s){s.classList.toggle("active",(s.dataset.c||"").toUpperCase()===hex.toUpperCase());});}
+  function autoText(bgIsDark){var d=lum(theme.txt)<0.5;if(bgIsDark&&d){theme.txt="#F5EFE2";setActiveSwatch($("txtSwatches"),theme.txt);}else if(!bgIsDark&&!d){theme.txt="#232A2E";setActiveSwatch($("txtSwatches"),theme.txt);}}
+  $("bgSwatches").addEventListener("click",function(e){var b=e.target.closest(".swatch");if(!b||!b.dataset.c)return;theme.bg=b.dataset.c;autoText(b.dataset.dark==="1");setActiveSwatch(this,theme.bg);applyTheme();});
+  $("bgCustom").addEventListener("input",function(e){theme.bg=e.target.value;[].forEach.call($("bgSwatches").querySelectorAll(".swatch:not(.custom)"),function(s){s.classList.remove("active");});autoText(lum(theme.bg)<0.5);applyTheme();});
+  $("txtSwatches").addEventListener("click",function(e){var b=e.target.closest(".swatch");if(!b||!b.dataset.c)return;theme.txt=b.dataset.c;setActiveSwatch(this,theme.txt);applyTheme();});
+  $("txtCustom").addEventListener("input",function(e){theme.txt=e.target.value;[].forEach.call($("txtSwatches").querySelectorAll(".swatch:not(.custom)"),function(s){s.classList.remove("active");});applyTheme();});
+  function clearFest(){[].forEach.call($("festSwatches").querySelectorAll(".swatch:not(.custom),.chip"),function(s){s.classList.remove("active");});}
+  $("festSwatches").addEventListener("click",function(e){var b=e.target.closest(".swatch,.chip");if(!b||!b.dataset.c)return;clearFest();b.classList.add("active");theme.fest=b.dataset.c==="auto"?"auto":b.dataset.c;applyTheme();});
+  $("festCustom").addEventListener("input",function(e){theme.fest=e.target.value;clearFest();applyTheme();});
+  $("opacity").addEventListener("input",function(e){theme.opacity=(+e.target.value)/100;$("opVal").textContent=e.target.value+"%";applyTheme();});
+
+  /* ---------- fonts ---------- */
+  function loadFont(file,family,cb){
+    file.arrayBuffer().then(function(buf){var ff=new FontFace(family,buf);return ff.load();})
+      .then(function(ff){document.fonts.add(ff);cb&&cb();})
+      .catch(function(err){alert("字體載入失敗:"+(err&&err.message?err.message:err));fontLabel();});
+  }
+  function fontLabel(){if(!theme.fontMain&&!theme.fontFb){$("fontNames").textContent="目前:預設黑體";return;}var t="主字體:"+(theme.fontMain?"已載入":"預設黑體");if(theme.fontFb)t+="　輔助:已載入";$("fontNames").textContent=t;}
+  $("fontMain").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var name="UserMain_"+Date.now();$("fontNames").textContent="主字體載入中…";loadFont(f,name,function(){theme.fontMain=name;applyTheme();fontLabel();});e.target.value="";});
+  $("fontFb").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var name="UserFb_"+Date.now();$("fontNames").textContent="輔助字體載入中…";loadFont(f,name,function(){theme.fontFb=name;applyTheme();fontLabel();});e.target.value="";});
+  $("fontReset").addEventListener("click",function(){theme.fontMain=null;theme.fontFb=null;applyTheme();fontLabel();});
+
+  /* ---------- export ---------- */
+  function pad2(n){return(n<10?"0":"")+n;}
+  function nextFrame(){return new Promise(function(r){requestAnimationFrame(function(){r();});});}
+  function fontsReady(){return document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve();}
+
+  function exportPNG(){
+    var btn=$("pngBtn");
+    if(typeof html2canvas==="undefined"){alert("PNG 函式庫尚未載入，請確認網路後重試。");return;}
+    var old=btn.textContent;btn.textContent="輸出中…";btn.disabled=true;
+    previewEl.classList.add("capturing");drawCollage(true);
+    fontsReady().then(nextFrame).then(function(){
+      return html2canvas(previewEl,{scale:2,backgroundColor:null,useCORS:true,logging:false});
+    }).then(function(canvas){
+      var a=document.createElement("a");a.download="2026-"+pad2(current+1)+"_"+MN[current]+".png";a.href=canvas.toDataURL("image/png");document.body.appendChild(a);a.click();document.body.removeChild(a);
+    }).catch(function(err){alert("輸出失敗:"+(err&&err.message?err.message:err));})
+    .then(function(){previewEl.classList.remove("capturing");btn.textContent=old;btn.disabled=false;drawCollage(false);});
+  }
+  $("pngBtn").addEventListener("click",exportPNG);
+
+  function exportAll(){
+    var btn=$("pngAllBtn");
+    if(typeof html2canvas==="undefined"){alert("PNG 函式庫尚未載入，請確認網路後重試。");return;}
+    if(typeof JSZip==="undefined"){alert("ZIP 函式庫尚未載入，請確認網路後重試。");return;}
+    var old=btn.textContent,saved=current;
+    btn.disabled=true;$("pngBtn").disabled=true;previewEl.classList.add("capturing");
+    var zip=new JSZip(),m=0;
+    function step(){
+      if(m>=12){
+        zip.generateAsync({type:"blob"}).then(function(content){
+          var a=document.createElement("a");a.href=URL.createObjectURL(content);a.download="2026-月曆-全年.zip";document.body.appendChild(a);a.click();
+          setTimeout(function(){URL.revokeObjectURL(a.href);document.body.removeChild(a);},1500);
+        }).catch(function(err){alert("ZIP 產生失敗:"+(err&&err.message?err.message:err));})
+        .then(function(){previewEl.classList.remove("capturing");current=saved;render();btn.textContent=old;btn.disabled=false;$("pngBtn").disabled=false;});
+        return;
+      }
+      btn.textContent="輸出中 "+(m+1)+"/12";
+      current=m;previewEl.className="preview "+layout;applyTheme();calEl.innerHTML=buildCalendar(m);syncMonths();
+      ensureDecoded(m).then(nextFrame).then(function(){drawCollage(true);return fontsReady();}).then(nextFrame).then(function(){
+        return html2canvas(previewEl,{scale:2,backgroundColor:null,useCORS:true,logging:false});
+      }).then(function(canvas){
+        return new Promise(function(res){canvas.toBlob(function(blob){zip.file("2026-"+pad2(m+1)+"_"+MN[m]+".png",blob);res();},"image/png");});
+      }).then(function(){m++;step();}).catch(function(err){
+        alert("第 "+(m+1)+" 個月輸出失敗:"+(err&&err.message?err.message:err));
+        previewEl.classList.remove("capturing");current=saved;render();btn.textContent=old;btn.disabled=false;$("pngBtn").disabled=false;
+      });
+    }
+    step();
+  }
+  $("pngAllBtn").addEventListener("click",exportAll);
+
+  applyTheme();fontLabel();render();
+})();
+</script>
+</body>
+</html>
