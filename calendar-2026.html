@@ -83,7 +83,7 @@
     --cal-font:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
     --title-font:"Noto Serif TC",serif; --num-font:"Caveat","Noto Serif TC",serif; --cal-pill:rgba(35,42,46,.07); --fest-color:rgba(35,42,46,.82); --cal-holibg:rgba(35,42,46,.08);
     --cal-scale:1; --pos-align:center; --pos-justify:center;
-    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
+    background:var(--cal-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
     width:100%;max-width:500px;display:flex;aspect-ratio:var(--ar)
   }
   .preview.l-top,.preview.l-bottom{flex-direction:column}
@@ -102,9 +102,13 @@
   .photo.dragover{outline:3px dashed var(--jade);outline-offset:-7px}
   .capturing .hint{display:none}
 
-  .cal{font-family:var(--cal-font);color:var(--cal-text);background:var(--cal-bg);flex:0 0 auto;display:flex;flex-direction:column;gap:.25em;overflow:hidden;font-size:calc(13px*var(--cal-scale));padding:1em 1.1em 1.1em}
-  .l-left .cal,.l-right .cal{flex:1 1 44%;justify-content:center}
-  .l-overlay .cal{flex:0 0 auto;width:min(440px,82%);border-radius:12px;padding:1.1em 1.3em 1.2em;box-shadow:0 8px 30px rgba(0,0,0,.18);position:relative;z-index:1}
+  .cal{font-family:var(--cal-font);color:var(--cal-text);background:var(--cal-bg);flex:0 0 auto;display:flex;flex-direction:column;gap:.25em;font-size:13px;padding:1em 1.1em 1.1em;transform:scale(var(--cal-scale));transform-origin:center}
+  .l-top .cal{transform-origin:top center}
+  .l-bottom .cal{transform-origin:bottom center}
+  .l-left .cal{transform-origin:left center}
+  .l-right .cal{transform-origin:right center}
+  .l-left .cal,.l-right .cal{flex:1 1 44%;justify-content:var(--pos-align)}
+  .l-overlay .cal{flex:0 0 auto;width:min(440px,82%);border-radius:12px;padding:1.1em 1.3em 1.2em;box-shadow:0 8px 30px rgba(0,0,0,.18);position:relative;z-index:1;transform-origin:var(--ov-origin,center)}
   .cal-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--cal-line);padding:0 .1em .35em;margin-bottom:.15em}
   .cal-month{font-family:var(--title-font);font-weight:600;font-size:1.95em;letter-spacing:.02em;color:var(--cal-text)}
   .cal-year{font-family:var(--num-font);font-size:1.55em;color:var(--cal-muted);letter-spacing:.02em}
@@ -153,7 +157,7 @@
       <div class="preview l-top" id="preview">
         <div class="photo" id="photo">
           <canvas id="pcanvas"></canvas>
-          <span class="hint">點空白處上傳 · 拖曳照片可調整位置</span>
+          <span class="hint">點空白處上傳 · 拖曳移動 · 滾輪縮放</span>
         </div>
         <div class="cal" id="cal"></div>
       </div>
@@ -194,11 +198,11 @@
     </div>
     <div class="divider"></div>
     <div class="grp">
-      <span class="glabel">日曆位置 <small>(滿版背景可自由定位)</small></span>
-      <div class="posgrid" id="posGrid">
-        <button data-v="T" data-h="L">↖</button><button data-v="T" data-h="C">↑</button><button data-v="T" data-h="R">↗</button>
-        <button data-v="C" data-h="L">←</button><button data-v="C" data-h="C" class="active">＋</button><button data-v="C" data-h="R">→</button>
-        <button data-v="B" data-h="L">↙</button><button data-v="B" data-h="C">↓</button><button data-v="B" data-h="R">↘</button>
+      <span class="glabel">月曆位置 <small>(上下：滿版／左右圖適用)</small></span>
+      <div class="seg" id="posSeg">
+        <button data-v="T">靠上</button>
+        <button data-v="C" class="active">置中</button>
+        <button data-v="B">靠下</button>
       </div>
     </div>
     <div class="grp">
@@ -238,7 +242,11 @@
       </div>
     </div>
     <div class="grp">
-      <span class="glabel">節日文字色 <small>(假日固定紅字)</small></span>
+      <span class="glabel">節日名稱 <small>(假日固定紅字)</small></span>
+      <div class="seg" id="festShowSeg">
+        <button data-s="1" class="active">顯示</button>
+        <button data-s="0">隱藏</button>
+      </div>
       <div class="swatches" id="festSwatches">
         <button class="chip active" data-c="auto">跟隨內文</button>
         <button class="swatch" data-c="#B5710F" style="background:#B5710F" title="赭"></button>
@@ -247,6 +255,13 @@
         <button class="swatch" data-c="#8A5BD6" style="background:#8A5BD6" title="紫"></button>
         <button class="swatch" data-c="#C2477E" style="background:#C2477E" title="桃"></button>
         <span class="swatch custom" title="自訂顏色"><input type="color" id="festCustom" value="#b5710f"></span>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">農曆／節氣</span>
+      <div class="seg" id="lunShowSeg">
+        <button data-s="1" class="active">顯示</button>
+        <button data-s="0">隱藏</button>
       </div>
     </div>
     <div class="grp font-grp">
@@ -293,8 +308,8 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   var cache={};          // dataURL -> HTMLImageElement
   var offsets={};        // month -> array of {ox,oy} pan offsets [-1..1]
   var current, layout="l-top";
-  var collageCount=1, collageStyle="grid", uploadTarget=0, curRegions=null;
-  var theme={ar:"3/4",bg:"#FFFFFF",opacity:0.92,txt:"#232A2E",scale:1,posV:"C",posH:"C",fest:"auto",fontMain:null,fontFb:null};
+  var collageCount=1, collageStyle="grid", uploadTarget=0, curRegions=null, showFest=true, showLun=true;
+  var theme={ar:"3/4",bg:"#FFFFFF",opacity:0.92,txt:"#232A2E",scale:1,posV:"C",fest:"auto",fontMain:null,fontFb:null};
   var today=new Date(), isThisYear=today.getFullYear()===YEAR;
   current = isThisYear ? today.getMonth() : 0;
 
@@ -333,7 +348,18 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   function syncMonths(){[].forEach.call(monthsEl.children,function(c){var m=+c.dataset.m;c.classList.toggle("active",m===current);c.classList.toggle("filled",hasImg(m));});}
   function hasImg(m){var a=images[m];if(!a)return false;for(var i=0;i<a.length;i++)if(a[i])return true;return false;}
   function selectMonth(i){current=i;syncMonths();render();}
-  function selectLayout(id){layout=id;[].forEach.call(layoutsEl.children,function(c){c.classList.toggle("active",c.dataset.l===id);});render();}
+  function updateAspectAvail(){
+    var stacked=(layout==="l-top"||layout==="l-bottom");
+    [].forEach.call($("aspectSeg").children,function(b){
+      var bad=stacked&&(b.dataset.ar==="4/3"||b.dataset.ar==="16/9");
+      b.disabled=bad;b.style.opacity=bad?".35":"";b.style.cursor=bad?"not-allowed":"";
+    });
+    if(stacked&&(theme.ar==="4/3"||theme.ar==="16/9")){
+      theme.ar="3/4";
+      [].forEach.call($("aspectSeg").children,function(b){b.classList.toggle("active",b.dataset.ar==="3/4");});
+    }
+  }
+  function selectLayout(id){layout=id;[].forEach.call(layoutsEl.children,function(c){c.classList.toggle("active",c.dataset.l===id);});updateAspectAvail();render();}
 
   var FLEX={T:"flex-start",C:"center",B:"flex-end",L:"flex-start",R:"flex-end"};
   function fontStack(){var s=[];if(theme.fontMain)s.push('"'+theme.fontMain+'"');if(theme.fontFb)s.push('"'+theme.fontFb+'"');s.push(DEFAULT_FONT);return s.join(",");}
@@ -352,7 +378,8 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     p.setProperty("--fest-color", theme.fest==="auto"?rgba(theme.txt,0.82):theme.fest);
     p.setProperty("--cal-scale",theme.scale);
     p.setProperty("--pos-align",FLEX[theme.posV]);
-    p.setProperty("--pos-justify",FLEX[theme.posH]);
+    p.setProperty("--ov-origin", theme.posV==="T"?"center top":theme.posV==="B"?"center bottom":"center");
+    p.setProperty("--pos-justify","center");
     var op=$("opacity");if(op)op.disabled=!overlay;
     var og=$("opGrp");if(og)og.style.opacity=overlay?"1":".5";
     var on=$("opNote");if(on)on.style.display=overlay?"none":"inline";
@@ -360,12 +387,13 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
 
   /* ---------- calendar ---------- */
   function chips(key){
-    var out="";
-    if(HOLIDAYS[key]) out+='<span class="ghol tw">'+HOLIDAYS[key]+'</span>';
+    if(!showFest)return "";
+    var out="",seen={};
+    if(HOLIDAYS[key]){out+='<span class="ghol tw">'+HOLIDAYS[key]+'</span>';seen[HOLIDAYS[key]]=1;}
     var fest="",fc="";
     if(LUNARFEST[key]){fest=LUNARFEST[key][0];fc="trad";}
     else if(EVENTS[key]){fest=EVENTS[key][0][0];fc=EVENTS[key][0][1];}
-    if(fest){
+    if(fest&&!seen[fest]){
       if(fc==="trad") out+='<span class="ghol trad">'+fest+'</span>';
       else out+='<span class="gpill '+fc+'">'+fest+'</span>';
     }
@@ -377,7 +405,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     if(HOLIDAYS[key])cls+=" holiday";
     if(isThisYear&&m===today.getMonth()&&day===today.getDate())cls+=" today";
     return '<div class="'+cls+'"><span class="gnum">'+day+'</span>'+
-      (lun[0]?'<span class="glun'+(lun[1]?" term":"")+'">'+lun[0]+'</span>':'')+
+      (showLun&&lun[0]?'<span class="glun'+(lun[1]?" term":"")+'">'+lun[0]+'</span>':'')+
       chips(key)+'<span class="gwrite"></span></div>';
   }
   function otherCell(n){return '<div class="gc other"><span class="gnum">'+n+'</span><span class="gwrite"></span></div>';}
@@ -400,17 +428,18 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   }
   function clamp(v,a,b){return v<a?a:v>b?b:v;}
   function clamp01(v){return v<0?0:v>1?1:v;}
-  function getOffset(m,i){return (offsets[m]&&offsets[m][i])||{ox:0,oy:0};}
-  function ensureOffset(m,i){if(!offsets[m])offsets[m]=[];if(!offsets[m][i])offsets[m][i]={ox:0,oy:0};return offsets[m][i];}
-  function coverParams(iw,ih,w,h){
-    var ir=iw/ih,r=w/h;
-    if(ir>r){var sh=ih,sw=sh*r;return{axis:"x",sw:sw,sh:sh,slack:iw-sw};}
-    var sw2=iw,sh2=sw2/r;return{axis:"y",sw:sw2,sh:sh2,slack:ih-sh2};
+  function getOffset(m,i){return (offsets[m]&&offsets[m][i])||{ox:0,oy:0,zoom:1};}
+  function ensureOffset(m,i){if(!offsets[m])offsets[m]=[];if(!offsets[m][i])offsets[m][i]={ox:0,oy:0,zoom:1};return offsets[m][i];}
+  function coverParams(iw,ih,w,h,z){
+    z=z||1;var ir=iw/ih,r=w/h,sw,sh;
+    if(ir>r){sh=ih;sw=ih*r;}else{sw=iw;sh=iw/r;}
+    sw/=z;sh/=z;
+    return{sw:sw,sh:sh,slackX:iw-sw,slackY:ih-sh};
   }
   function coverPan(ctx,img,x,y,w,h,off){
-    var p=coverParams(img.naturalWidth,img.naturalHeight,w,h),sx=0,sy=0;
-    if(p.axis==="x"){sx=clamp(p.slack*(0.5+(off?off.ox:0)/2),0,p.slack);}
-    else{sy=clamp(p.slack*(0.5+(off?off.oy:0)/2),0,p.slack);}
+    var z=(off&&off.zoom)||1,p=coverParams(img.naturalWidth,img.naturalHeight,w,h,z);
+    var sx=clamp(p.slackX*(0.5+(off?off.ox:0)/2),0,p.slackX);
+    var sy=clamp(p.slackY*(0.5+(off?off.oy:0)/2),0,p.slackY);
     ctx.drawImage(img,sx,sy,p.sw,p.sh,x,y,w,h);
   }
   function fillPh(ctx,x,y,w,h,plus){
@@ -483,7 +512,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   function loadFile(file){
     if(!file||!/^image\//.test(file.type))return;
     var r=new FileReader();
-    r.onload=function(e){var url=e.target.result;if(!images[current])images[current]=[];images[current][uploadTarget]=url;ensureOffset(current,uploadTarget).ox=0;ensureOffset(current,uploadTarget).oy=0;decode(url,function(){scheduleDraw();syncMonths();});};
+    r.onload=function(e){var url=e.target.result;if(!images[current])images[current]=[];images[current][uploadTarget]=url;var o=ensureOffset(current,uploadTarget);o.ox=0;o.oy=0;o.zoom=1;decode(url,function(){scheduleDraw();syncMonths();});};
     r.readAsDataURL(file);
   }
   function targetFromEvent(e){var rect=photoEl.getBoundingClientRect();var px=(e.clientX-rect.left)/rect.width,py=(e.clientY-rect.top)/rect.height;return regionAt(clamp01(px),clamp01(py));}
@@ -493,8 +522,8 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     var i=targetFromEvent(e),url=(images[current]||[])[i];
     drag={i:i,sx:e.clientX,sy:e.clientY,moved:false,has:!!url};
     if(url&&cache[url]&&cache[url].naturalWidth){
-      var d=regionDestPx(i,photoEl.clientWidth,photoEl.clientHeight),p=coverParams(cache[url].naturalWidth,cache[url].naturalHeight,d.w,d.h),off=getOffset(current,i);
-      drag.axis=p.axis;drag.sw=p.sw;drag.sh=p.sh;drag.slack=p.slack;drag.w=d.w;drag.h=d.h;drag.ox=off.ox;drag.oy=off.oy;
+      var off=getOffset(current,i),d=regionDestPx(i,photoEl.clientWidth,photoEl.clientHeight),p=coverParams(cache[url].naturalWidth,cache[url].naturalHeight,d.w,d.h,off.zoom||1);
+      drag.sw=p.sw;drag.sh=p.sh;drag.slackX=p.slackX;drag.slackY=p.slackY;drag.w=d.w;drag.h=d.h;drag.ox=off.ox;drag.oy=off.oy;
       photoEl.style.cursor="grabbing";
     }
     e.preventDefault();
@@ -505,8 +534,8 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     if(!drag.moved&&Math.sqrt(dx*dx+dy*dy)>4)drag.moved=true;
     if(!drag.moved)return;
     var off=ensureOffset(current,drag.i);
-    if(drag.axis==="x")off.ox=drag.slack>0?clamp(drag.ox-2*dx*(drag.sw/drag.w)/drag.slack,-1,1):0;
-    else off.oy=drag.slack>0?clamp(drag.oy-2*dy*(drag.sh/drag.h)/drag.slack,-1,1):0;
+    if(drag.slackX>0.5)off.ox=clamp(drag.ox-2*dx*(drag.sw/drag.w)/drag.slackX,-1,1);
+    if(drag.slackY>0.5)off.oy=clamp(drag.oy-2*dy*(drag.sh/drag.h)/drag.slackY,-1,1);
     scheduleDraw();
   });
   window.addEventListener("mouseup",function(){
@@ -519,6 +548,14 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     var url=(images[current]||[])[targetFromEvent(e)];
     photoEl.style.cursor=url?"grab":"pointer";
   });
+  photoEl.addEventListener("wheel",function(e){
+    var i=targetFromEvent(e),url=(images[current]||[])[i];
+    if(!url)return;
+    e.preventDefault();
+    var off=ensureOffset(current,i);
+    off.zoom=clamp((off.zoom||1)*(e.deltaY<0?1.1:1/1.1),1,5);
+    scheduleDraw();
+  },{passive:false});
   fileInput.addEventListener("change",function(e){loadFile(e.target.files[0]);fileInput.value="";});
   ["dragenter","dragover"].forEach(function(ev){photoEl.addEventListener(ev,function(e){e.preventDefault();photoEl.classList.add("dragover");});});
   ["dragleave","drop"].forEach(function(ev){photoEl.addEventListener(ev,function(e){e.preventDefault();photoEl.classList.remove("dragover");});});
@@ -526,10 +563,10 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
 
   /* ---------- panel controls ---------- */
   function segActivate(container,btn){[].forEach.call(container.children,function(c){c.classList.remove("active");});btn.classList.add("active");}
-  $("aspectSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);theme.ar=b.dataset.ar;applyTheme();scheduleDraw();});
+  $("aspectSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b||b.disabled)return;segActivate(this,b);theme.ar=b.dataset.ar;applyTheme();scheduleDraw();});
   $("countSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);collageCount=+b.dataset.n;scheduleDraw();syncMonths();});
   $("styleSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);collageStyle=b.dataset.s;scheduleDraw();});
-  $("posGrid").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);theme.posV=b.dataset.v;theme.posH=b.dataset.h;applyTheme();});
+  $("posSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);theme.posV=b.dataset.v;applyTheme();});
   $("scale").addEventListener("input",function(e){theme.scale=(+e.target.value)/100;$("scaleVal").textContent=e.target.value+"%";applyTheme();});
 
   function setActiveSwatch(container,hex){[].forEach.call(container.querySelectorAll(".swatch"),function(s){s.classList.toggle("active",(s.dataset.c||"").toUpperCase()===hex.toUpperCase());});}
@@ -541,6 +578,9 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   function clearFest(){[].forEach.call($("festSwatches").querySelectorAll(".swatch:not(.custom),.chip"),function(s){s.classList.remove("active");});}
   $("festSwatches").addEventListener("click",function(e){var b=e.target.closest(".swatch,.chip");if(!b||!b.dataset.c)return;clearFest();b.classList.add("active");theme.fest=b.dataset.c==="auto"?"auto":b.dataset.c;applyTheme();});
   $("festCustom").addEventListener("input",function(e){theme.fest=e.target.value;clearFest();applyTheme();});
+  function updateFestUI(){var sw=$("festSwatches");sw.style.opacity=showFest?"1":".4";sw.style.pointerEvents=showFest?"":"none";}
+  $("festShowSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);showFest=b.dataset.s==="1";updateFestUI();calEl.innerHTML=buildCalendar(current);});
+  $("lunShowSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);showLun=b.dataset.s==="1";calEl.innerHTML=buildCalendar(current);});
   $("opacity").addEventListener("input",function(e){theme.opacity=(+e.target.value)/100;$("opVal").textContent=e.target.value+"%";applyTheme();});
 
   /* ---------- fonts ---------- */
@@ -604,7 +644,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   }
   $("pngAllBtn").addEventListener("click",exportAll);
 
-  applyTheme();fontLabel();render();
+  applyTheme();fontLabel();updateAspectAvail();updateFestUI();render();
 })();
 </script>
 </body>
