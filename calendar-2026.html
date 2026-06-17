@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+  <!-- calendar build v2.0.1 (semver: MAJOR.MINOR.PATCH) -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2026 照片月曆 · 設計版</title>
@@ -71,18 +72,40 @@
   input[type=range]{width:100%;accent-color:var(--jade)}
   .fontrow{display:flex;gap:8px;flex-wrap:wrap}
   .fbtn{font:inherit;font-size:12.5px;padding:9px 13px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);cursor:pointer;color:var(--ink)}
+  .sel{font:inherit;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;width:max-content}
   .fbtn:hover{border-color:#b9bfb6}
   .fbtn.reset{color:var(--muted)}
-  .fontnames{font-size:11px;color:var(--muted);margin-top:2px}
+  .fontnames{font-size:11px;color:var(--muted);margin-top:2px;word-break:break-all;line-height:1.5}
+  .ce-add{display:flex;flex-wrap:wrap;gap:7px}
+  .ce-add input{font:inherit;font-size:12.5px;padding:8px 9px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}
+  .ce-add input[type=date]{flex:1 1 130px}
+  .ce-add input[type=text]{flex:1 1 110px;min-width:0}
+  .ce-list{display:flex;flex-direction:column;gap:5px;margin-top:4px;max-height:150px;overflow:auto}
+  .ce-item{display:flex;align-items:center;gap:8px;font-size:12px}
+  .ce-date{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);min-width:36px}
+  .ce-name{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ce-del{flex:0 0 auto;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;line-height:1}
+  .ce-del:hover{color:var(--sun);background:#FBE6E2}
+  .ce-empty{font-size:11px;color:var(--muted)}
   .divider{height:1px;background:var(--line);margin:2px -2px}
+  .section{border-top:1px solid var(--line)}
+  .section:first-child{border-top:0}
+  .sec-head{width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:0;cursor:pointer;padding:15px 2px;font-family:var(--ui);font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink)}
+  .sec-head:hover{color:var(--jade)}
+  .chev{width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;margin-right:5px;margin-top:-3px}
+  .sec-head:hover .chev{border-color:var(--jade)}
+  .section.collapsed .chev{transform:rotate(-45deg)}
+  .sec-body{display:flex;flex-direction:column;gap:18px;padding:2px 2px 18px}
+  .section.collapsed .sec-body{display:none}
+  .subhead{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:2px 0 2px 9px;border-left:2px solid var(--jade)}
 
   .preview{
     --ar:3/4;
     --cal-bg:rgba(255,255,255,.92); --cal-text:#232A2E;
     --cal-muted:rgba(35,42,46,.5); --cal-line:rgba(35,42,46,.2);
     --cal-font:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
-    --title-font:"Noto Serif TC",serif; --num-font:"Caveat","Noto Serif TC",serif; --cal-pill:rgba(35,42,46,.07); --fest-color:rgba(35,42,46,.82); --cal-holibg:rgba(35,42,46,.08);
-    --cal-scale:1; --pos-align:center; --pos-justify:center;
+    --title-font:"Noto Serif TC",serif; --num-font:"Caveat","Noto Serif TC",serif; --cal-pill:rgba(35,42,46,.07); --fest-color:rgba(35,42,46,.82); --cal-holibg:rgba(35,42,46,.08); --custom-color:#0F8A6B;
+    --cal-scale:1; --date-size:20px; --sub-size:9px; --pos-align:center; --pos-justify:center;
     background:var(--cal-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
     width:100%;max-width:500px;display:flex;aspect-ratio:var(--ar)
   }
@@ -102,37 +125,35 @@
   .photo.dragover{outline:3px dashed var(--jade);outline-offset:-7px}
   .capturing .hint{display:none}
 
-  .cal{font-family:var(--cal-font);color:var(--cal-text);background:var(--cal-bg);flex:0 0 auto;display:flex;flex-direction:column;gap:.25em;font-size:13px;padding:1em 1.1em 1.1em;transform:scale(var(--cal-scale));transform-origin:center}
-  .l-top .cal{transform-origin:top center}
-  .l-bottom .cal{transform-origin:bottom center}
-  .l-left .cal{transform-origin:left center}
-  .l-right .cal{transform-origin:right center}
+  .cal{font-family:var(--cal-font);color:var(--cal-text);background:var(--cal-bg);flex:0 0 auto;display:flex;flex-direction:column;gap:.25em;font-size:calc(13px*var(--cal-scale));padding:1em 1.1em 1.1em}
   .l-left .cal,.l-right .cal{flex:1 1 44%;justify-content:var(--pos-align)}
-  .l-overlay .cal{flex:0 0 auto;width:min(440px,82%);border-radius:12px;padding:1.1em 1.3em 1.2em;box-shadow:0 8px 30px rgba(0,0,0,.18);position:relative;z-index:1;transform-origin:var(--ov-origin,center)}
+  .l-overlay .cal{flex:0 0 auto;width:min(440px,82%);border-radius:12px;padding:1.1em 1.3em 1.2em;box-shadow:0 8px 30px rgba(0,0,0,.18);position:relative;z-index:1}
   .cal-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--cal-line);padding:0 .1em .35em;margin-bottom:.15em}
   .cal-month{font-family:var(--title-font);font-weight:600;font-size:1.95em;letter-spacing:.02em;color:var(--cal-text)}
   .cal-year{font-family:var(--num-font);font-size:1.55em;color:var(--cal-muted);letter-spacing:.02em}
   .gcal{display:grid;grid-template-columns:repeat(7,1fr);column-gap:.3em;row-gap:0}
   .gwk{text-align:center;font-size:.72em;font-weight:500;letter-spacing:.12em;color:var(--cal-muted);text-transform:uppercase;padding:.15em 0 .45em;border-bottom:1px solid var(--cal-line);margin-bottom:.2em}
   .gwk.sun{color:var(--sun)} .gwk.sat{color:var(--sat)}
-  .gc{min-height:3.2em;border-bottom:1px solid var(--cal-line);display:flex;flex-direction:column;padding:.2em .28em 0;overflow:hidden}
+  .gc{min-height:3.2em;border-bottom:1px solid var(--cal-line);display:flex;flex-direction:column;padding:.2em .28em 0}
   .gc.other{opacity:.13}
   .gc.holiday{background:var(--cal-holibg);border-radius:.3em}
-  .gnum{font-family:var(--num-font);font-size:1.6em;line-height:1;color:var(--cal-text)}
+  .gnum{font-family:var(--num-font);font-size:calc(var(--date-size)*var(--cal-scale));line-height:1;color:var(--cal-text)}
   .gc.sun .gnum{color:var(--sun)} .gc.sat .gnum{color:var(--sat)} .gc.holiday .gnum{color:var(--sun)}
   .gc.today{outline:2px solid var(--jade);outline-offset:-2px;border-radius:.3em}
-  .glun{font-size:.62em;line-height:1.2;color:var(--cal-muted);margin-top:.12em}
+  .glun{font-size:calc(var(--sub-size)*var(--cal-scale));line-height:1.2;color:var(--cal-muted);margin-top:.12em}
   .glun.term{color:var(--jade);font-weight:600}
-  .ghol{font-size:.6em;line-height:1.25;margin-top:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .ghol{font-size:calc(var(--sub-size)*var(--cal-scale));line-height:1.25;margin-top:.12em;white-space:normal;overflow-wrap:anywhere;word-break:break-word;font-weight:500}
   .ghol.tw{color:var(--sun)} .ghol.trad{color:var(--fest-color)}
-  .gpill{font-size:.56em;line-height:1.2;margin-top:.16em;padding:.1em .42em;border-radius:.35em;background:var(--cal-pill);color:var(--fest-color);width:fit-content;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gpill{font-size:calc(var(--sub-size)*var(--cal-scale));line-height:1.2;margin-top:.16em;padding:.1em .42em;border-radius:.35em;background:var(--cal-pill);color:var(--fest-color);width:fit-content;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  .gpill.custom{color:var(--custom-color)}
   .gwrite{flex:1;min-height:.25em}
 
   @media (max-width:1080px){
     body{flex-wrap:wrap}
     .sidebar{order:1} .center{order:2;flex:1 1 60%}
-    .controls{order:3;width:100%;flex:1 1 100%;height:auto;position:static;border-left:0;border-top:1px solid var(--line);flex-direction:row;flex-wrap:wrap;gap:16px 26px;align-items:flex-start}
-    .controls .btn{width:auto;min-width:150px}
+    .controls{order:3;width:100%;flex:1 1 100%;height:auto;position:static;border-left:0;border-top:1px solid var(--line);flex-direction:column;gap:0;align-items:stretch}
+    .sec-body{flex-direction:row;flex-wrap:wrap;gap:16px 26px;align-items:flex-start}
+    .controls .btn{width:auto;min-width:150px;margin-top:10px}
     input[type=range]{width:160px}
   }
   @media (max-width:780px){
@@ -147,7 +168,7 @@
 </head>
 <body>
   <aside class="sidebar">
-    <div class="brand"><div class="eyebrow">Photo Calendar</div><div class="year">2026</div></div>
+    <div class="brand"><div class="eyebrow">Photo Calendar</div><div class="year">2026</div><div style="font-size:10px;letter-spacing:.12em;color:var(--sidebar-muted);margin-top:7px">v2.0.1</div></div>
     <nav class="months" id="months" aria-label="選擇月份"></nav>
     <p class="tip">點照片區各區塊（或拖曳）上傳／更換當月照片，橘點＝已有照片。可放 1–4 張做方格／梯形拼貼。右側面板調整版面與設計。</p>
   </aside>
@@ -165,114 +186,156 @@
   </main>
 
   <aside class="controls">
-    <div class="grp">
-      <span class="glabel">排版方式 <small>(照片為主)</small></span>
-      <div class="layout-row" id="layouts"></div>
-    </div>
-    <div class="divider"></div>
-    <div class="grp">
-      <span class="glabel">畫面比例</span>
-      <div class="seg" id="aspectSeg">
-        <button data-ar="3/4" class="active">3:4</button>
-        <button data-ar="1/1">1:1</button>
-        <button data-ar="4/3">4:3</button>
-        <button data-ar="16/9">16:9</button>
-        <button data-ar="9/16">9:16</button>
+    <div class="section collapsed">
+      <button class="sec-head" type="button"><span>照片排版</span><i class="chev"></i></button>
+      <div class="sec-body">
+        <div class="grp">
+          <span class="glabel">整體呈現 <small>(照片為主)</small></span>
+          <div class="layout-row" id="layouts"></div>
+        </div>
+        <div class="grp">
+          <span class="glabel">畫面比例</span>
+          <div class="seg" id="aspectSeg">
+            <button data-ar="3/4" class="active">3:4</button>
+            <button data-ar="1/1">1:1</button>
+            <button data-ar="4/3">4:3</button>
+            <button data-ar="16/9">16:9</button>
+            <button data-ar="9/16">9:16</button>
+          </div>
+        </div>
+        <div class="subhead">拼貼</div>
+        <div class="grp">
+          <span class="glabel">張數</span>
+          <div class="seg" id="countSeg">
+            <button data-n="1" class="active">1</button>
+            <button data-n="2">2</button>
+            <button data-n="3">3</button>
+            <button data-n="4">4</button>
+          </div>
+        </div>
+        <div class="grp">
+          <span class="glabel">樣式</span>
+          <div class="seg" id="styleSeg">
+            <button data-s="grid" class="active">方格</button>
+            <button data-s="trap">梯形</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="grp">
-      <span class="glabel">拼貼張數</span>
-      <div class="seg" id="countSeg">
-        <button data-n="1" class="active">1</button>
-        <button data-n="2">2</button>
-        <button data-n="3">3</button>
-        <button data-n="4">4</button>
+
+    <div class="section collapsed">
+      <button class="sec-head" type="button"><span>月曆設計</span><i class="chev"></i></button>
+      <div class="sec-body">
+        <div class="grp">
+          <span class="glabel">位置 <small>(上下：滿版／左右圖適用)</small></span>
+          <div class="seg" id="posSeg">
+            <button data-v="T">靠上</button>
+            <button data-v="C" class="active">置中</button>
+            <button data-v="B">靠下</button>
+          </div>
+        </div>
+        <div class="grp">
+          <span class="glabel">縮放 <em id="scaleVal">100%</em></span>
+          <input type="range" id="scale" min="75" max="140" value="100">
+        </div>
+        <div class="grp font-grp">
+          <span class="glabel">字體 <small>(缺字用輔助字體補)</small></span>
+          <div class="fontrow">
+            <label class="fbtn">主字體<input type="file" id="fontMain" accept=".ttf,.otf,.woff,.woff2" hidden></label>
+            <label class="fbtn">輔助字體<input type="file" id="fontFb" accept=".ttf,.otf,.woff,.woff2" hidden></label>
+            <button class="fbtn reset" id="fontReset">重設</button>
+          </div>
+          <div class="fontnames" id="fontNames">目前：預設黑體</div>
+        </div>
+        <div class="grp">
+          <span class="glabel">日期大小</span>
+          <select class="sel" id="dateSizeSel"></select>
+        </div>
+        <div class="grp">
+          <span class="glabel">節日／節氣大小</span>
+          <select class="sel" id="subSizeSel"></select>
+        </div>
+        <div class="grp">
+          <span class="glabel">面板底色</span>
+          <div class="swatches" id="bgSwatches">
+            <button class="swatch active" data-c="#FFFFFF" style="background:#FFFFFF" title="白"></button>
+            <button class="swatch" data-c="#FAF6EE" style="background:#FAF6EE" title="奶油"></button>
+            <button class="swatch" data-c="#ECEAE4" style="background:#ECEAE4" title="米灰"></button>
+            <button class="swatch" data-c="#FCE3EC" style="background:#FCE3EC" title="粉"></button>
+            <button class="swatch" data-c="#DCE7EE" style="background:#DCE7EE" title="天藍"></button>
+            <button class="swatch" data-c="#DCE7DF" style="background:#DCE7DF" title="抹茶"></button>
+            <button class="swatch" data-c="#1C1C1E" style="background:#1C1C1E" data-dark="1" title="黑"></button>
+            <button class="swatch" data-c="#20302A" style="background:#20302A" data-dark="1" title="墨綠"></button>
+            <button class="swatch" data-c="#1E2A3A" style="background:#1E2A3A" data-dark="1" title="墨藍"></button>
+            <span class="swatch custom" title="自訂顏色"><input type="color" id="bgCustom" value="#ffffff"></span>
+          </div>
+        </div>
+        <div class="grp" id="opGrp">
+          <span class="glabel">透明度 <em id="opVal">92%</em> <small id="opNote">（僅滿版背景）</small></span>
+          <input type="range" id="opacity" min="0" max="100" value="92">
+        </div>
+        <div class="grp">
+          <span class="glabel">文字顏色</span>
+          <div class="swatches" id="txtSwatches">
+            <button class="swatch active" data-c="#232A2E" style="background:#232A2E" title="墨黑"></button>
+            <button class="swatch" data-c="#5A615C" style="background:#5A615C" title="灰"></button>
+            <button class="swatch" data-c="#FFFFFF" style="background:#FFFFFF" title="白"></button>
+            <button class="swatch" data-c="#F5EFE2" style="background:#F5EFE2" title="米白"></button>
+            <button class="swatch" data-c="#7A2E2E" style="background:#7A2E2E" title="酒紅"></button>
+            <button class="swatch" data-c="#2B3A67" style="background:#2B3A67" title="靛藍"></button>
+            <span class="swatch custom" title="自訂顏色"><input type="color" id="txtCustom" value="#232a2e"></span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="grp">
-      <span class="glabel">拼貼樣式</span>
-      <div class="seg" id="styleSeg">
-        <button data-s="grid" class="active">方格</button>
-        <button data-s="trap">梯形</button>
+
+    <div class="section collapsed">
+      <button class="sec-head" type="button"><span>節日設計</span><i class="chev"></i></button>
+      <div class="sec-body">
+        <div class="grp">
+          <span class="glabel">節日名稱 <small>(假日固定紅字)</small></span>
+          <div class="seg" id="festShowSeg">
+            <button data-s="1" class="active">顯示</button>
+            <button data-s="0">隱藏</button>
+          </div>
+          <div class="swatches" id="festSwatches">
+            <button class="chip active" data-c="auto">跟隨內文</button>
+            <button class="swatch" data-c="#B5710F" style="background:#B5710F" title="赭"></button>
+            <button class="swatch" data-c="#2B6CB0" style="background:#2B6CB0" title="靛藍"></button>
+            <button class="swatch" data-c="#1F7A5A" style="background:#1F7A5A" title="墨綠"></button>
+            <button class="swatch" data-c="#8A5BD6" style="background:#8A5BD6" title="紫"></button>
+            <button class="swatch" data-c="#C2477E" style="background:#C2477E" title="桃"></button>
+            <span class="swatch custom" title="自訂顏色"><input type="color" id="festCustom" value="#b5710f"></span>
+          </div>
+        </div>
+        <div class="grp">
+          <span class="glabel">農曆／節氣</span>
+          <div class="seg" id="lunShowSeg">
+            <button data-s="1" class="active">顯示</button>
+            <button data-s="0">隱藏</button>
+          </div>
+        </div>
+        <div class="grp">
+          <span class="glabel">自訂節日 <small>(永遠顯示，不受開關影響)</small></span>
+          <div class="ce-add">
+            <input type="date" id="ceDate" min="2026-01-01" max="2026-12-31" value="2026-01-01">
+            <input type="text" id="ceName" placeholder="節日名稱" maxlength="14">
+            <button class="fbtn" id="ceAdd">新增</button>
+          </div>
+          <div class="swatches" id="ceColorSwatches" style="margin-top:2px">
+            <button class="swatch active" data-c="#0F8A6B" style="background:#0F8A6B" title="松綠"></button>
+            <button class="swatch" data-c="#C9483A" style="background:#C9483A" title="紅"></button>
+            <button class="swatch" data-c="#2B6CB0" style="background:#2B6CB0" title="藍"></button>
+            <button class="swatch" data-c="#8A5BD6" style="background:#8A5BD6" title="紫"></button>
+            <button class="swatch" data-c="#C2477E" style="background:#C2477E" title="桃"></button>
+            <button class="swatch" data-c="#B5710F" style="background:#B5710F" title="赭"></button>
+            <span class="swatch custom" title="自訂顏色"><input type="color" id="ceColorCustom" value="#0f8a6b"></span>
+          </div>
+          <div class="ce-list" id="ceList"></div>
+        </div>
       </div>
     </div>
-    <div class="divider"></div>
-    <div class="grp">
-      <span class="glabel">月曆位置 <small>(上下：滿版／左右圖適用)</small></span>
-      <div class="seg" id="posSeg">
-        <button data-v="T">靠上</button>
-        <button data-v="C" class="active">置中</button>
-        <button data-v="B">靠下</button>
-      </div>
-    </div>
-    <div class="grp">
-      <span class="glabel">月曆縮放 <em id="scaleVal">100%</em></span>
-      <input type="range" id="scale" min="75" max="140" value="100">
-    </div>
-    <div class="divider"></div>
-    <div class="grp">
-      <span class="glabel">面板底色</span>
-      <div class="swatches" id="bgSwatches">
-        <button class="swatch active" data-c="#FFFFFF" style="background:#FFFFFF" title="白"></button>
-        <button class="swatch" data-c="#FAF6EE" style="background:#FAF6EE" title="奶油"></button>
-        <button class="swatch" data-c="#ECEAE4" style="background:#ECEAE4" title="米灰"></button>
-        <button class="swatch" data-c="#FCE3EC" style="background:#FCE3EC" title="粉"></button>
-        <button class="swatch" data-c="#DCE7EE" style="background:#DCE7EE" title="天藍"></button>
-        <button class="swatch" data-c="#DCE7DF" style="background:#DCE7DF" title="抹茶"></button>
-        <button class="swatch" data-c="#1C1C1E" style="background:#1C1C1E" data-dark="1" title="黑"></button>
-        <button class="swatch" data-c="#20302A" style="background:#20302A" data-dark="1" title="墨綠"></button>
-        <button class="swatch" data-c="#1E2A3A" style="background:#1E2A3A" data-dark="1" title="墨藍"></button>
-        <span class="swatch custom" title="自訂顏色"><input type="color" id="bgCustom" value="#ffffff"></span>
-      </div>
-    </div>
-    <div class="grp" id="opGrp">
-      <span class="glabel">透明度 <em id="opVal">92%</em> <small id="opNote">（僅滿版背景）</small></span>
-      <input type="range" id="opacity" min="0" max="100" value="92">
-    </div>
-    <div class="grp">
-      <span class="glabel">文字顏色</span>
-      <div class="swatches" id="txtSwatches">
-        <button class="swatch active" data-c="#232A2E" style="background:#232A2E" title="墨黑"></button>
-        <button class="swatch" data-c="#5A615C" style="background:#5A615C" title="灰"></button>
-        <button class="swatch" data-c="#FFFFFF" style="background:#FFFFFF" title="白"></button>
-        <button class="swatch" data-c="#F5EFE2" style="background:#F5EFE2" title="米白"></button>
-        <button class="swatch" data-c="#7A2E2E" style="background:#7A2E2E" title="酒紅"></button>
-        <button class="swatch" data-c="#2B3A67" style="background:#2B3A67" title="靛藍"></button>
-        <span class="swatch custom" title="自訂顏色"><input type="color" id="txtCustom" value="#232a2e"></span>
-      </div>
-    </div>
-    <div class="grp">
-      <span class="glabel">節日名稱 <small>(假日固定紅字)</small></span>
-      <div class="seg" id="festShowSeg">
-        <button data-s="1" class="active">顯示</button>
-        <button data-s="0">隱藏</button>
-      </div>
-      <div class="swatches" id="festSwatches">
-        <button class="chip active" data-c="auto">跟隨內文</button>
-        <button class="swatch" data-c="#B5710F" style="background:#B5710F" title="赭"></button>
-        <button class="swatch" data-c="#2B6CB0" style="background:#2B6CB0" title="靛藍"></button>
-        <button class="swatch" data-c="#1F7A5A" style="background:#1F7A5A" title="墨綠"></button>
-        <button class="swatch" data-c="#8A5BD6" style="background:#8A5BD6" title="紫"></button>
-        <button class="swatch" data-c="#C2477E" style="background:#C2477E" title="桃"></button>
-        <span class="swatch custom" title="自訂顏色"><input type="color" id="festCustom" value="#b5710f"></span>
-      </div>
-    </div>
-    <div class="grp">
-      <span class="glabel">農曆／節氣</span>
-      <div class="seg" id="lunShowSeg">
-        <button data-s="1" class="active">顯示</button>
-        <button data-s="0">隱藏</button>
-      </div>
-    </div>
-    <div class="grp font-grp">
-      <span class="glabel">字體 <small>(缺字用輔助字體補)</small></span>
-      <div class="fontrow">
-        <label class="fbtn">主字體<input type="file" id="fontMain" accept=".ttf,.otf,.woff,.woff2" hidden></label>
-        <label class="fbtn">輔助字體<input type="file" id="fontFb" accept=".ttf,.otf,.woff,.woff2" hidden></label>
-        <button class="fbtn reset" id="fontReset">重設</button>
-      </div>
-      <div class="fontnames" id="fontNames">目前:預設黑體</div>
-    </div>
+
     <div class="divider"></div>
     <button class="btn primary" id="pngBtn">存 PNG（當月）</button>
     <button class="btn" id="pngAllBtn">存全年（12 張 ZIP）</button>
@@ -309,7 +372,11 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   var offsets={};        // month -> array of {ox,oy} pan offsets [-1..1]
   var current, layout="l-top";
   var collageCount=1, collageStyle="grid", uploadTarget=0, curRegions=null, showFest=true, showLun=true;
-  var theme={ar:"3/4",bg:"#FFFFFF",opacity:0.92,txt:"#232A2E",scale:1,posV:"C",fest:"auto",fontMain:null,fontFb:null};
+  var customEvents={};
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function loadCustom(){try{var s=localStorage.getItem("cal2026_custom");customEvents=s?JSON.parse(s):{};}catch(e){customEvents={};}}
+  function saveCustom(){try{localStorage.setItem("cal2026_custom",JSON.stringify(customEvents));}catch(e){}}
+  var theme={ar:"3/4",bg:"#FFFFFF",opacity:0.92,txt:"#232A2E",scale:1,dateSize:20,subSize:9,posV:"C",fest:"auto",customColor:"#0F8A6B",fontMain:null,fontFb:null,fontMainName:"",fontFbName:""};
   var today=new Date(), isThisYear=today.getFullYear()===YEAR;
   current = isThisYear ? today.getMonth() : 0;
 
@@ -347,14 +414,15 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   });
   function syncMonths(){[].forEach.call(monthsEl.children,function(c){var m=+c.dataset.m;c.classList.toggle("active",m===current);c.classList.toggle("filled",hasImg(m));});}
   function hasImg(m){var a=images[m];if(!a)return false;for(var i=0;i<a.length;i++)if(a[i])return true;return false;}
-  function selectMonth(i){current=i;syncMonths();render();}
+  function selectMonth(i){current=i;$("ceDate").value="2026-"+pad2(i+1)+"-01";syncMonths();render();}
   function updateAspectAvail(){
-    var stacked=(layout==="l-top"||layout==="l-bottom");
+    var stacked=(layout==="l-top"||layout==="l-bottom"),overlay=(layout==="l-overlay");
+    function badAr(ar){return (stacked&&(ar==="4/3"||ar==="16/9"))||(overlay&&(ar==="16/9"||ar==="9/16"));}
     [].forEach.call($("aspectSeg").children,function(b){
-      var bad=stacked&&(b.dataset.ar==="4/3"||b.dataset.ar==="16/9");
+      var bad=badAr(b.dataset.ar);
       b.disabled=bad;b.style.opacity=bad?".35":"";b.style.cursor=bad?"not-allowed":"";
     });
-    if(stacked&&(theme.ar==="4/3"||theme.ar==="16/9")){
+    if(badAr(theme.ar)){
       theme.ar="3/4";
       [].forEach.call($("aspectSeg").children,function(b){b.classList.toggle("active",b.dataset.ar==="3/4");});
     }
@@ -376,7 +444,10 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     p.setProperty("--cal-pill",rgba(theme.txt,0.08));
     p.setProperty("--cal-holibg",rgba(theme.txt, lum(theme.bg)<0.5?0.16:0.09));
     p.setProperty("--fest-color", theme.fest==="auto"?rgba(theme.txt,0.82):theme.fest);
+    p.setProperty("--custom-color", theme.customColor);
     p.setProperty("--cal-scale",theme.scale);
+    p.setProperty("--date-size",theme.dateSize+"px");
+    p.setProperty("--sub-size",theme.subSize+"px");
     p.setProperty("--pos-align",FLEX[theme.posV]);
     p.setProperty("--ov-origin", theme.posV==="T"?"center top":theme.posV==="B"?"center bottom":"center");
     p.setProperty("--pos-justify","center");
@@ -387,15 +458,18 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
 
   /* ---------- calendar ---------- */
   function chips(key){
-    if(!showFest)return "";
     var out="",seen={};
-    if(HOLIDAYS[key]){out+='<span class="ghol tw">'+HOLIDAYS[key]+'</span>';seen[HOLIDAYS[key]]=1;}
-    var fest="",fc="";
-    if(LUNARFEST[key]){fest=LUNARFEST[key][0];fc="trad";}
-    else if(EVENTS[key]){fest=EVENTS[key][0][0];fc=EVENTS[key][0][1];}
-    if(fest&&!seen[fest]){
-      if(fc==="trad") out+='<span class="ghol trad">'+fest+'</span>';
-      else out+='<span class="gpill '+fc+'">'+fest+'</span>';
+    if(showFest&&HOLIDAYS[key]){out+='<span class="ghol tw">'+HOLIDAYS[key]+'</span>';seen[HOLIDAYS[key]]=1;}
+    var cu=customEvents[key];
+    if(cu){for(var i=0;i<cu.length;i++){if(seen[cu[i]])continue;seen[cu[i]]=1;out+='<span class="gpill custom">'+esc(cu[i])+'</span>';}}
+    if(showFest){
+      var fest="",fc="";
+      if(LUNARFEST[key]){fest=LUNARFEST[key][0];fc="trad";}
+      else if(EVENTS[key]){fest=EVENTS[key][0][0];fc=EVENTS[key][0][1];}
+      if(fest&&!seen[fest]){
+        if(fc==="trad") out+='<span class="ghol trad">'+fest+'</span>';
+        else out+='<span class="gpill '+fc+'">'+fest+'</span>';
+      }
     }
     return out;
   }
@@ -568,6 +642,10 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   $("styleSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);collageStyle=b.dataset.s;scheduleDraw();});
   $("posSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);theme.posV=b.dataset.v;applyTheme();});
   $("scale").addEventListener("input",function(e){theme.scale=(+e.target.value)/100;$("scaleVal").textContent=e.target.value+"%";applyTheme();});
+  function fillSizes(sel,val){var h="";for(var i=9;i<=28;i++)h+='<option value="'+i+'"'+(i===val?" selected":"")+'>'+i+'px</option>';sel.innerHTML=h;}
+  fillSizes($("dateSizeSel"),theme.dateSize);fillSizes($("subSizeSel"),theme.subSize);
+  $("dateSizeSel").addEventListener("change",function(e){theme.dateSize=+e.target.value;applyTheme();});
+  $("subSizeSel").addEventListener("change",function(e){theme.subSize=+e.target.value;applyTheme();});
 
   function setActiveSwatch(container,hex){[].forEach.call(container.querySelectorAll(".swatch"),function(s){s.classList.toggle("active",(s.dataset.c||"").toUpperCase()===hex.toUpperCase());});}
   function autoText(bgIsDark){var d=lum(theme.txt)<0.5;if(bgIsDark&&d){theme.txt="#F5EFE2";setActiveSwatch($("txtSwatches"),theme.txt);}else if(!bgIsDark&&!d){theme.txt="#232A2E";setActiveSwatch($("txtSwatches"),theme.txt);}}
@@ -581,6 +659,37 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   function updateFestUI(){var sw=$("festSwatches");sw.style.opacity=showFest?"1":".4";sw.style.pointerEvents=showFest?"":"none";}
   $("festShowSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);showFest=b.dataset.s==="1";updateFestUI();calEl.innerHTML=buildCalendar(current);});
   $("lunShowSeg").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;segActivate(this,b);showLun=b.dataset.s==="1";calEl.innerHTML=buildCalendar(current);});
+
+  function renderCustomList(){
+    var box=$("ceList"),keys=Object.keys(customEvents);
+    if(!keys.length){box.innerHTML='<div class="ce-empty">尚未新增</div>';return;}
+    keys.sort(function(a,b){var pa=a.split("-"),pb=b.split("-");return (+pa[0])-(+pb[0])||(+pa[1])-(+pb[1]);});
+    var html="";
+    keys.forEach(function(k){var p=k.split("-");customEvents[k].forEach(function(n,i){
+      html+='<div class="ce-item"><span class="ce-date">'+p[0]+'/'+p[1]+'</span><span class="ce-name">'+esc(n)+'</span><button class="ce-del" data-k="'+k+'" data-i="'+i+'" aria-label="刪除">✕</button></div>';
+    });});
+    box.innerHTML=html;
+  }
+  function addCustom(){
+    var d=$("ceDate").value,name=($("ceName").value||"").trim();
+    if(!d||!name)return;
+    var p=d.split("-"),key=(+p[1])+"-"+(+p[2]);
+    if(!customEvents[key])customEvents[key]=[];
+    customEvents[key].push(name);
+    saveCustom();$("ceName").value="";
+    renderCustomList();calEl.innerHTML=buildCalendar(current);
+  }
+  function removeCustom(key,idx){
+    if(!customEvents[key])return;
+    customEvents[key].splice(idx,1);
+    if(!customEvents[key].length)delete customEvents[key];
+    saveCustom();renderCustomList();calEl.innerHTML=buildCalendar(current);
+  }
+  $("ceAdd").addEventListener("click",addCustom);
+  $("ceName").addEventListener("keydown",function(e){if(e.key==="Enter")addCustom();});
+  $("ceList").addEventListener("click",function(e){var b=e.target.closest(".ce-del");if(!b)return;removeCustom(b.dataset.k,+b.dataset.i);});
+  $("ceColorSwatches").addEventListener("click",function(e){var b=e.target.closest(".swatch");if(!b||!b.dataset.c)return;theme.customColor=b.dataset.c;setActiveSwatch(this,theme.customColor);applyTheme();});
+  $("ceColorCustom").addEventListener("input",function(e){theme.customColor=e.target.value;[].forEach.call($("ceColorSwatches").querySelectorAll(".swatch:not(.custom)"),function(s){s.classList.remove("active");});applyTheme();});
   $("opacity").addEventListener("input",function(e){theme.opacity=(+e.target.value)/100;$("opVal").textContent=e.target.value+"%";applyTheme();});
 
   /* ---------- fonts ---------- */
@@ -589,10 +698,10 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
       .then(function(ff){document.fonts.add(ff);cb&&cb();})
       .catch(function(err){alert("字體載入失敗:"+(err&&err.message?err.message:err));fontLabel();});
   }
-  function fontLabel(){if(!theme.fontMain&&!theme.fontFb){$("fontNames").textContent="目前:預設黑體";return;}var t="主字體:"+(theme.fontMain?"已載入":"預設黑體");if(theme.fontFb)t+="　輔助:已載入";$("fontNames").textContent=t;}
-  $("fontMain").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var name="UserMain_"+Date.now();$("fontNames").textContent="主字體載入中…";loadFont(f,name,function(){theme.fontMain=name;applyTheme();fontLabel();});e.target.value="";});
-  $("fontFb").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var name="UserFb_"+Date.now();$("fontNames").textContent="輔助字體載入中…";loadFont(f,name,function(){theme.fontFb=name;applyTheme();fontLabel();});e.target.value="";});
-  $("fontReset").addEventListener("click",function(){theme.fontMain=null;theme.fontFb=null;applyTheme();fontLabel();});
+  function fontLabel(){if(!theme.fontMain&&!theme.fontFb){$("fontNames").textContent="目前：預設黑體";return;}var t="主字體："+(theme.fontMainName||"預設黑體");if(theme.fontFb)t+="　輔助："+(theme.fontFbName||"");$("fontNames").textContent=t;}
+  $("fontMain").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var name="UserMain_"+Date.now();$("fontNames").textContent="主字體載入中…";loadFont(f,name,function(){theme.fontMain=name;theme.fontMainName=f.name.replace(/\.[^.]+$/,"");applyTheme();fontLabel();});e.target.value="";});
+  $("fontFb").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var name="UserFb_"+Date.now();$("fontNames").textContent="輔助字體載入中…";loadFont(f,name,function(){theme.fontFb=name;theme.fontFbName=f.name.replace(/\.[^.]+$/,"");applyTheme();fontLabel();});e.target.value="";});
+  $("fontReset").addEventListener("click",function(){theme.fontMain=null;theme.fontFb=null;theme.fontMainName="";theme.fontFbName="";applyTheme();fontLabel();});
 
   /* ---------- export ---------- */
   function pad2(n){return(n<10?"0":"")+n;}
@@ -644,6 +753,8 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   }
   $("pngAllBtn").addEventListener("click",exportAll);
 
+  [].forEach.call(document.querySelectorAll(".sec-head"),function(h){h.addEventListener("click",function(){h.parentNode.classList.toggle("collapsed");});});
+  loadCustom();$("ceDate").value="2026-"+pad2(current+1)+"-01";renderCustomList();
   applyTheme();fontLabel();updateAspectAvail();updateFestUI();render();
 })();
 </script>
