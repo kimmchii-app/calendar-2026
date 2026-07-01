@@ -4,7 +4,7 @@
   <!-- calendar build v2.0.1 (semver: MAJOR.MINOR.PATCH) -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 照片月曆 · 設計版</title>
+<title>2026 · 2027 照片月曆 · 設計版</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
@@ -25,6 +25,10 @@
   .sidebar{width:200px;flex:0 0 200px;background:var(--sidebar);color:#fff;padding:26px 18px 22px;display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh}
   .brand .eyebrow{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--sidebar-muted);margin-bottom:2px}
   .brand .year{font-family:var(--display);font-weight:800;font-size:48px;line-height:.9;letter-spacing:-.02em}
+  .year-switch{display:flex;gap:6px}
+  .year-tab{flex:1;font-family:var(--ui);font-size:13px;padding:8px 6px;background:transparent;color:#D7DCD9;border:1px solid var(--sidebar-line);border-radius:9px;cursor:pointer;transition:.15s;letter-spacing:.02em}
+  .year-tab:hover{border-color:#5a6770;color:#fff}
+  .year-tab.active{background:var(--jade);border-color:var(--jade);color:#fff;font-weight:700}
   .months{display:grid;grid-template-columns:1fr 1fr;gap:7px}
   .month-btn{font-family:var(--ui);font-size:13.5px;color:#D7DCD9;background:transparent;border:1px solid var(--sidebar-line);border-radius:9px;padding:9px 6px;cursor:pointer;transition:.15s}
   .month-btn:hover{border-color:#5a6770;color:#fff}
@@ -168,7 +172,11 @@
 </head>
 <body>
   <aside class="sidebar">
-    <div class="brand"><div class="eyebrow">Photo Calendar</div><div class="year">2026</div><div style="font-size:10px;letter-spacing:.12em;color:var(--sidebar-muted);margin-top:7px">v2.0.1</div></div>
+    <div class="brand"><div class="eyebrow">Photo Calendar</div><div class="year" id="brandYear">2026</div><div style="font-size:10px;letter-spacing:.12em;color:var(--sidebar-muted);margin-top:7px">v2.0.1</div></div>
+    <div class="year-switch" id="yearSwitch">
+      <button type="button" class="year-tab active" data-y="2026">2026</button>
+      <button type="button" class="year-tab" data-y="2027">2027</button>
+    </div>
     <nav class="months" id="months" aria-label="選擇月份"></nav>
     <p class="tip">點照片區各區塊（或拖曳）上傳／更換當月照片，橘點＝已有照片。可放 1–4 張做方格／梯形拼貼。右側面板調整版面與設計。</p>
   </aside>
@@ -349,6 +357,53 @@ var LUNARFEST={"1-26":["臘八節"],"2-3":["尾牙"],"2-17":["春節"],"2-18":["
 var HOLIDAYS={"1-1":"元旦","2-15":"小年夜","2-16":"除夕","2-17":"春節","2-18":"春節","2-19":"春節","2-20":"春節彈性放假","2-27":"和平紀念日補假","2-28":"和平紀念日","4-3":"兒童節補假","4-4":"兒童節","4-5":"清明節","4-6":"清明節補假","5-1":"勞動節","6-19":"端午節","9-25":"中秋節","9-28":"教師節","10-9":"國慶日補假","10-10":"國慶日","10-25":"光復節","10-26":"光復節補假","12-25":"行憲紀念日"};
 var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]],"2-14":[["西洋情人節","world"]],"3-8":[["國際婦女節","world"]],"3-14":[["白色情人節","world"],["圓周率日","tech"]],"3-17":[["聖派翠克節","world"]],"3-31":[["世界備份日","tech"]],"4-1":[["愚人節","world"]],"4-14":[["黑色情人節","fun"]],"4-22":[["世界地球日","world"]],"4-23":[["世界閱讀日","world"]],"4-30":[["珍珠奶茶日","fun"]],"5-4":[["星際大戰日","tech"]],"5-10":[["母親節","world"]],"5-14":[["玫瑰情人節","fun"]],"5-25":[["極客驕傲日","tech"]],"5-28":[["國際漢堡日","fun"]],"6-1":[["國際兒童節","world"]],"6-14":[["親親情人節","fun"]],"6-21":[["國際自拍日","fun"]],"7-6":[["國際接吻日","fun"]],"7-7":[["世界巧克力日","fun"]],"7-14":[["銀色情人節","fun"]],"7-17":[["世界表情符號日","tech"]],"8-7":[["國際啤酒日","fun"]],"8-8":[["父親節(台灣)","tw"],["國際貓咪日","fun"]],"8-13":[["國際左撇子日","fun"]],"8-14":[["綠色情人節","fun"]],"8-26":[["國際狗狗日","fun"]],"9-13":[["程式設計師節","tech"]],"9-14":[["音樂情人節","fun"]],"10-1":[["國際咖啡日","fun"]],"10-2":[["世界微笑日","fun"]],"10-4":[["世界動物日","fun"]],"10-14":[["葡萄酒情人節","fun"]],"10-31":[["萬聖節","world"]],"11-11":[["雙11 · 光棍節","fun"]],"11-13":[["世界友善日","fun"]],"11-14":[["電影情人節","fun"]],"11-26":[["感恩節","world"]],"11-30":[["國際資安日","tech"]],"12-14":[["擁抱情人節","fun"]],"12-24":[["平安夜","world"]],"12-25":[["聖誕節","world"]],"12-31":[["跨年夜","world"]]};
 
+/* ---------- 2027 資料 ---------- */
+/* 台灣行政院公告之 2027 年國定假日（依紀念日及節日實施條例，並含補假／彈性放假） */
+var HOLIDAYS_2027={"1-1":"元旦","2-5":"除夕","2-6":"春節","2-7":"春節","2-8":"春節","2-9":"春節補假","2-10":"春節補假","2-28":"和平紀念日","3-1":"和平紀念日補假","4-4":"兒童節","4-5":"清明節","4-6":"兒童節補假","5-1":"勞動節","6-9":"端午節","9-15":"中秋節","9-28":"教師節","10-10":"國慶日","10-11":"國慶日補假","10-25":"光復節","12-24":"行憲紀念日補假","12-25":"行憲紀念日"};
+var LUNARFEST_2027={"1-15":["臘八節"],"1-23":["尾牙"],"2-4":["小年夜"],"2-5":["除夕"],"2-6":["春節"],"2-7":["春節"],"2-8":["春節"],"2-20":["元宵節"],"3-9":["頭牙‧土地公生"],"6-9":["端午節"],"8-8":["七夕情人節"],"8-16":["中元節"],"9-15":["中秋節"],"10-8":["重陽節"]};
+var EVENTS_2027={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]],"2-14":[["西洋情人節","world"]],"3-8":[["國際婦女節","world"]],"3-14":[["白色情人節","world"],["圓周率日","tech"]],"3-17":[["聖派翠克節","world"]],"3-31":[["世界備份日","tech"]],"4-1":[["愚人節","world"]],"4-14":[["黑色情人節","fun"]],"4-22":[["世界地球日","world"]],"4-23":[["世界閱讀日","world"]],"4-30":[["珍珠奶茶日","fun"]],"5-4":[["星際大戰日","tech"]],"5-9":[["母親節","world"]],"5-14":[["玫瑰情人節","fun"]],"5-25":[["極客驕傲日","tech"]],"5-28":[["國際漢堡日","fun"]],"6-1":[["國際兒童節","world"]],"6-14":[["親親情人節","fun"]],"6-21":[["國際自拍日","fun"]],"7-6":[["國際接吻日","fun"]],"7-7":[["世界巧克力日","fun"]],"7-14":[["銀色情人節","fun"]],"7-17":[["世界表情符號日","tech"]],"8-7":[["國際啤酒日","fun"]],"8-8":[["父親節(台灣)","tw"],["國際貓咪日","fun"]],"8-13":[["國際左撇子日","fun"]],"8-14":[["綠色情人節","fun"]],"8-26":[["國際狗狗日","fun"]],"9-13":[["程式設計師節","tech"]],"9-14":[["音樂情人節","fun"]],"10-1":[["國際咖啡日","fun"]],"10-2":[["世界微笑日","fun"]],"10-4":[["世界動物日","fun"]],"10-14":[["葡萄酒情人節","fun"]],"10-31":[["萬聖節","world"]],"11-11":[["雙11 · 光棍節","fun"]],"11-13":[["世界友善日","fun"]],"11-14":[["電影情人節","fun"]],"11-25":[["感恩節","world"]],"11-30":[["國際資安日","tech"]],"12-14":[["擁抱情人節","fun"]],"12-24":[["平安夜","world"]],"12-25":[["聖誕節","world"]],"12-31":[["跨年夜","world"]]};
+
+/* 2027 農曆月起始日（西曆）與長度；由此算出當年每天的農曆日期 */
+var LUNAR_2027=(function(){
+  var months=[
+    {y:2026,m:12,d:9,name:"冬月",days:30},
+    {y:2027,m:1,d:8,name:"臘月",days:29},
+    {y:2027,m:2,d:6,name:"正月",days:30},
+    {y:2027,m:3,d:8,name:"二月",days:29},
+    {y:2027,m:4,d:6,name:"三月",days:30},
+    {y:2027,m:5,d:6,name:"四月",days:30},
+    {y:2027,m:6,d:5,name:"五月",days:29},
+    {y:2027,m:7,d:4,name:"六月",days:29},
+    {y:2027,m:8,d:2,name:"七月",days:30},
+    {y:2027,m:9,d:1,name:"八月",days:29},
+    {y:2027,m:9,d:30,name:"九月",days:29},
+    {y:2027,m:10,d:29,name:"十月",days:30},
+    {y:2027,m:11,d:28,name:"冬月",days:29},
+    {y:2027,m:12,d:27,name:"臘月",days:30}
+  ];
+  var terms={"1-6":"小寒","1-20":"大寒","2-4":"立春","2-19":"雨水","3-6":"驚蟄","3-21":"春分","4-5":"清明","4-20":"穀雨","5-6":"立夏","5-21":"小滿","6-6":"芒種","6-22":"夏至","7-7":"小暑","7-23":"大暑","8-8":"立秋","8-23":"處暑","9-8":"白露","9-23":"秋分","10-8":"寒露","10-24":"霜降","11-8":"立冬","11-23":"小雪","12-7":"大雪","12-22":"冬至"};
+  var names=["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十","廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+  var out={};
+  months.forEach(function(mo){
+    var g=new Date(mo.y,mo.m-1,mo.d);
+    for(var j=0;j<mo.days;j++){
+      if(g.getFullYear()===2027){
+        var k=(g.getMonth()+1)+"-"+g.getDate();
+        if(terms[k])out[k]=[terms[k],1];
+        else if(j===0)out[k]=[mo.name,0];
+        else out[k]=[names[j],0];
+      }
+      g.setDate(g.getDate()+1);
+    }
+  });
+  return out;
+})();
+
+var YEAR_DATA={
+  2026:{LUNAR:LUNAR,LUNARFEST:LUNARFEST,HOLIDAYS:HOLIDAYS,EVENTS:EVENTS},
+  2027:{LUNAR:LUNAR_2027,LUNARFEST:LUNARFEST_2027,HOLIDAYS:HOLIDAYS_2027,EVENTS:EVENTS_2027}
+};
+
 (function(){
   "use strict";
   var YEAR=2026;
@@ -367,18 +422,32 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     4:[[[0,0],[.32,0],[.16,1],[0,1]],[[.32,0],[.56,0],[.40,1],[.16,1]],[[.56,0],[.80,0],[.64,1],[.40,1]],[[.80,0],[1,0],[1,1],[.64,1]]]
   };
 
-  var images={};         // month -> array of dataURL (up to 4)
-  var cache={};          // dataURL -> HTMLImageElement
-  var offsets={};        // month -> array of {ox,oy} pan offsets [-1..1]
+  var _imgStore={2026:{},2027:{}};   // year -> {month -> [dataURL]}
+  var _offStore={2026:{},2027:{}};   // year -> {month -> [{ox,oy,zoom}]}
+  var _ceStore={2026:{},2027:{}};    // year -> {"m-d" -> [name]}
+  try{var _sy=+localStorage.getItem("cal_year");if(_sy===2026||_sy===2027)YEAR=_sy;}catch(e){}
+  LUNAR=YEAR_DATA[YEAR].LUNAR;LUNARFEST=YEAR_DATA[YEAR].LUNARFEST;HOLIDAYS=YEAR_DATA[YEAR].HOLIDAYS;EVENTS=YEAR_DATA[YEAR].EVENTS;
+  var images=_imgStore[YEAR];
+  var cache={};                      // dataURL -> HTMLImageElement (跨年份共用)
+  var offsets=_offStore[YEAR];
   var current, layout="l-top";
   var collageCount=1, collageStyle="grid", uploadTarget=0, curRegions=null, showFest=true, showLun=true;
-  var customEvents={};
+  var customEvents=_ceStore[YEAR];
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
-  function loadCustom(){try{var s=localStorage.getItem("cal2026_custom");customEvents=s?JSON.parse(s):{};}catch(e){customEvents={};}}
-  function saveCustom(){try{localStorage.setItem("cal2026_custom",JSON.stringify(customEvents));}catch(e){}}
+  function loadCustom(){
+    try{
+      var s=localStorage.getItem("cal_custom"),data=s?JSON.parse(s):null;
+      if(!data){var old=localStorage.getItem("cal2026_custom");data=old?{2026:JSON.parse(old)}:{};}
+      _ceStore[2026]=data[2026]||{};
+      _ceStore[2027]=data[2027]||{};
+      customEvents=_ceStore[YEAR];
+    }catch(e){_ceStore[2026]={};_ceStore[2027]={};customEvents=_ceStore[YEAR];}
+  }
+  function saveCustom(){try{localStorage.setItem("cal_custom",JSON.stringify({2026:_ceStore[2026],2027:_ceStore[2027]}));}catch(e){}}
   var theme={ar:"3/4",bg:"#FFFFFF",opacity:0.92,txt:"#232A2E",scale:1,dateSize:20,subSize:9,posV:"C",fest:"auto",customColor:"#0F8A6B",fontMain:null,fontFb:null,fontMainName:"",fontFbName:""};
-  var today=new Date(), isThisYear=today.getFullYear()===YEAR;
-  current = isThisYear ? today.getMonth() : 0;
+  var today=new Date();
+  function isThisYear(){return today.getFullYear()===YEAR;}
+  current = isThisYear() ? today.getMonth() : 0;
 
   var $=function(id){return document.getElementById(id);};
   var monthsEl=$("months"),layoutsEl=$("layouts"),previewEl=$("preview"),photoEl=$("photo"),
@@ -414,7 +483,20 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   });
   function syncMonths(){[].forEach.call(monthsEl.children,function(c){var m=+c.dataset.m;c.classList.toggle("active",m===current);c.classList.toggle("filled",hasImg(m));});}
   function hasImg(m){var a=images[m];if(!a)return false;for(var i=0;i<a.length;i++)if(a[i])return true;return false;}
-  function selectMonth(i){current=i;$("ceDate").value="2026-"+pad2(i+1)+"-01";syncMonths();render();}
+  function selectMonth(i){current=i;$("ceDate").value=YEAR+"-"+pad2(i+1)+"-01";syncMonths();render();}
+  function setYear(y){
+    if(y===YEAR)return;
+    YEAR=y;
+    var d=YEAR_DATA[y];
+    LUNAR=d.LUNAR;LUNARFEST=d.LUNARFEST;HOLIDAYS=d.HOLIDAYS;EVENTS=d.EVENTS;
+    images=_imgStore[y];offsets=_offStore[y];customEvents=_ceStore[y];
+    try{localStorage.setItem("cal_year",y);}catch(e){}
+    $("brandYear").textContent=y;
+    [].forEach.call($("yearSwitch").children,function(b){b.classList.toggle("active",+b.dataset.y===y);});
+    current=isThisYear()?today.getMonth():0;
+    $("ceDate").min=y+"-01-01";$("ceDate").max=y+"-12-31";$("ceDate").value=y+"-"+pad2(current+1)+"-01";
+    renderCustomList();syncMonths();render();
+  }
   function updateAspectAvail(){
     var stacked=(layout==="l-top"||layout==="l-bottom"),overlay=(layout==="l-overlay");
     function badAr(ar){return (stacked&&(ar==="4/3"||ar==="16/9"))||(overlay&&(ar==="16/9"||ar==="9/16"));}
@@ -477,7 +559,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     var key=(m+1)+"-"+day,lun=LUNAR[key]||["",0],cls="gc";
     if(dow===0)cls+=" sun";else if(dow===6)cls+=" sat";
     if(HOLIDAYS[key])cls+=" holiday";
-    if(isThisYear&&m===today.getMonth()&&day===today.getDate())cls+=" today";
+    if(isThisYear()&&m===today.getMonth()&&day===today.getDate())cls+=" today";
     return '<div class="'+cls+'"><span class="gnum">'+day+'</span>'+
       (showLun&&lun[0]?'<span class="glun'+(lun[1]?" term":"")+'">'+lun[0]+'</span>':'')+
       chips(key)+'<span class="gwrite"></span></div>';
@@ -716,7 +798,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     fontsReady().then(nextFrame).then(function(){
       return html2canvas(previewEl,{scale:2,backgroundColor:null,useCORS:true,logging:false});
     }).then(function(canvas){
-      var a=document.createElement("a");a.download="2026-"+pad2(current+1)+"_"+MN[current]+".png";a.href=canvas.toDataURL("image/png");document.body.appendChild(a);a.click();document.body.removeChild(a);
+      var a=document.createElement("a");a.download=YEAR+"-"+pad2(current+1)+"_"+MN[current]+".png";a.href=canvas.toDataURL("image/png");document.body.appendChild(a);a.click();document.body.removeChild(a);
     }).catch(function(err){alert("輸出失敗:"+(err&&err.message?err.message:err));})
     .then(function(){previewEl.classList.remove("capturing");btn.textContent=old;btn.disabled=false;drawCollage(false);});
   }
@@ -732,7 +814,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
     function step(){
       if(m>=12){
         zip.generateAsync({type:"blob"}).then(function(content){
-          var a=document.createElement("a");a.href=URL.createObjectURL(content);a.download="2026-月曆-全年.zip";document.body.appendChild(a);a.click();
+          var a=document.createElement("a");a.href=URL.createObjectURL(content);a.download=YEAR+"-月曆-全年.zip";document.body.appendChild(a);a.click();
           setTimeout(function(){URL.revokeObjectURL(a.href);document.body.removeChild(a);},1500);
         }).catch(function(err){alert("ZIP 產生失敗:"+(err&&err.message?err.message:err));})
         .then(function(){previewEl.classList.remove("capturing");current=saved;render();btn.textContent=old;btn.disabled=false;$("pngBtn").disabled=false;});
@@ -743,7 +825,7 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
       ensureDecoded(m).then(nextFrame).then(function(){drawCollage(true);return fontsReady();}).then(nextFrame).then(function(){
         return html2canvas(previewEl,{scale:2,backgroundColor:null,useCORS:true,logging:false});
       }).then(function(canvas){
-        return new Promise(function(res){canvas.toBlob(function(blob){zip.file("2026-"+pad2(m+1)+"_"+MN[m]+".png",blob);res();},"image/png");});
+        return new Promise(function(res){canvas.toBlob(function(blob){zip.file(YEAR+"-"+pad2(m+1)+"_"+MN[m]+".png",blob);res();},"image/png");});
       }).then(function(){m++;step();}).catch(function(err){
         alert("第 "+(m+1)+" 個月輸出失敗:"+(err&&err.message?err.message:err));
         previewEl.classList.remove("capturing");current=saved;render();btn.textContent=old;btn.disabled=false;$("pngBtn").disabled=false;
@@ -754,7 +836,12 @@ var EVENTS={"1-14":[["日記情人節","fun"]],"1-21":[["國際擁抱日","fun"]
   $("pngAllBtn").addEventListener("click",exportAll);
 
   [].forEach.call(document.querySelectorAll(".sec-head"),function(h){h.addEventListener("click",function(){h.parentNode.classList.toggle("collapsed");});});
-  loadCustom();$("ceDate").value="2026-"+pad2(current+1)+"-01";renderCustomList();
+  $("yearSwitch").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;setYear(+b.dataset.y);});
+  loadCustom();
+  $("brandYear").textContent=YEAR;
+  [].forEach.call($("yearSwitch").children,function(b){b.classList.toggle("active",+b.dataset.y===YEAR);});
+  $("ceDate").min=YEAR+"-01-01";$("ceDate").max=YEAR+"-12-31";$("ceDate").value=YEAR+"-"+pad2(current+1)+"-01";
+  renderCustomList();
   applyTheme();fontLabel();updateAspectAvail();updateFestUI();render();
 })();
 </script>
